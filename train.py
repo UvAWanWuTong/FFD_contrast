@@ -109,15 +109,10 @@ for epoch in range(opt.nepoch):
     """ contrastive learning """
     scheduler.step()
     for i, data in enumerate(dataloader, 0):
-        # input_dict = data  # points: 32 * 25000 *3  , target: 32 * 1 （batch size = 32）
-        # pcd0 = input_dict['pcd0']
-        # pcd1 = input_dict['pcd0']
+
         pcd0,pcd1,pos_pairs,cls = data
 
-        # N0, N1 = input_dict['pcd0'].shape[0], input_dict['pcd1'].shape[0]
 
-        # pos_pairs = input_dict['correspondences'].cuda()
-        # points = points.transpose(2, 1) # 3 * 2500
         points1, points2 = pcd0.cuda(), pcd1.cuda()
         points1 = points1.transpose(2, 1)
         points2 = points2.transpose(2, 1)
@@ -130,9 +125,9 @@ for epoch in range(opt.nepoch):
 
 
         # random sample
-        sampled_inds = np.random.choice(points1.size()[2], opt.num_points, replace=False)
-        # q = F0[sampled_inds]
-        # k = F1[sampled_inds]
+        # sampled_inds = np.random.choice(points1.size()[2], opt.num_points, replace=False)
+        # # q = F0[sampled_inds]
+        # # k = F1[sampled_inds]
 
 
         criterion = NCESoftmaxLoss().cuda()
