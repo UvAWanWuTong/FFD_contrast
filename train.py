@@ -5,7 +5,10 @@ import random
 import torch.optim as optim
 import torch.utils.data
 from model.pointnet.dataset import ModelNetDataset
+import numpy as np
 from model.pointnet.model import PointNetCls, feature_transform_regularizer
+from utils.criterion import  NCESoftmaxLoss
+
 import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
@@ -25,7 +28,6 @@ parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
 parser.add_argument('--dataset_type', type=str, default='modelnet40', help="modelnet40")
 parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
-
 opt = parser.parse_args()
 print(opt)
 
@@ -55,7 +57,9 @@ dataloader = torch.utils.data.DataLoader(
     dataset,
     batch_size=opt.batchSize,
     shuffle=True,
-    num_workers=int(opt.workers))
+    num_workers=int(opt.workers),
+    # collate_fn=default_collate_pair_fn
+)
 
 testdataloader = torch.utils.data.DataLoader(
         test_dataset,
@@ -98,33 +102,53 @@ num_batch = len(dataset) / opt.batchSize
 # print('Iinitialization of wandb complete\n')
 #
 
-
-
+cur_device = torch.cuda.current_device()
 
 for epoch in range(opt.nepoch):
     """ contrastive learning """
     scheduler.step()
     for i, data in enumerate(dataloader, 0):
-        input_dict = data  # points: 32 * 25000 *3  , target: 32 * 1 （batch size = 32）
-        pcd0 = input_dict['pcd0']
-        pcd1 = input_dict['pcd0']
+        # input_dict = data  # points: 32 * 25000 *3  , target: 32 * 1 （batch size = 32）
+        # pcd0 = input_dict['pcd0']
+        # pcd1 = input_dict['pcd0']
+        pcd0,pcd1,pos_pairs,cls = data
 
-        N0, N1 = input_dict['pcd0'].shape[0], input_dict['pcd1'].shape[0]
-        pos_pairs = input_dict['correspondences'].cuda()
+        # N0, N1 = input_dict['pcd0'].shape[0], input_dict['pcd1'].shape[0]
 
+        # pos_pairs = input_dict['correspondences'].cuda()
         # points = points.transpose(2, 1) # 3 * 2500
         points1, points2 = pcd0.cuda(), pcd1.cuda()
+        points1 = points1.transpose(2, 1)
+        points2 = points2.transpose(2, 1)
+
 
         optimizer.zero_grad()
         classifier = classifier.train()
-
         F0,_,_ = classifier(points1)
         F1,_,_ = classifier(points2)
+        F1,F0
 
-#         uniform = torch.distributions.Uniform(0, 1).sample([len(count)]).cuda()
-#         cums = torch.cat([torch.tensor([0], device=self.cur_device), torch.cumsum(count, dim=0)[0:-1]], dim=0)
-#         k_sel = pos_pairs[:, 1][off + cums]
-#
+        # random sample
+        sampled_inds = np.random.choice(points1.size()[2], opt.num_points, replace=False)
+        q = F0[sampled_inds]
+        k = F1[sampled_inds]
+
+        # pos logit
+        logits = torch.mm(q, k.transpose(1, 0))  # npos by npos
+        labels = torch.arange(opt.num_points).cuda().long()
+        out = torch.div(logits, self.T)
+        out = out.squeeze().contiguous()
+
+        criterion = NCESoftmaxLoss().cuda()
+        loss = criterion(out, labels)
+
+        #
+
+        #
+        # count = pos_pairs[0][:,0].cuda()
+        # uniform = torch.distributions.Uniform(0, 1).sample([len(count)]).cuda()
+        # cums = torch.cat([torch.tensor([0], device=cur_device), torch.cumsum(count, dim=0)[0:-1]], dim=0)
+
 #         q = F0[q_unique.long()]
 #         k = F1[k_sel.long()]
 #
