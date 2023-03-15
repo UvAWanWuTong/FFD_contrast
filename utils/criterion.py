@@ -6,15 +6,20 @@ from torch import nn
 
 class NCESoftmaxLoss(nn.Module):
     def  __init__(self):
-        super(NcesSoftmaxLoss,self).__init__()
+        # keep code reptitive
+        super(NCESoftmaxLoss,self).__init__()
         self.device =     torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         self.temperature = 0.07
         self.criterion = nn.CrossEntropyLoss()
+        self.batch_size = 32
+        self.n_views = 2
+
+
 
     def info_nce_loss(self, features):
         # fesatures.shape[512,128]
 
-        labels = torch.cat([torch.arange(self.args.batch_size) for i in range(self.args.n_views)],
+        labels = torch.cat([torch.arange(self.batch_size) for i in range(self.n_views)],
                            dim=0)  # labels [512]  [0-255]+[0-255]
         labels = (labels.unsqueeze(0) == labels.unsqueeze(1)).float()  # convert label in format of(0,1)
         labels = labels.to(self.device)  # labels [512,512]
@@ -48,7 +53,7 @@ class NCESoftmaxLoss(nn.Module):
         return logits, labels
 
     def forward(self, logits, label):
-        contrastive_features = torch.concat((logits,label),dim=0).size()
+        contrastive_features = torch.concat((logits,label),dim=0)
         logits, labels = self.info_nce_loss(contrastive_features)
         loss = self.criterion(logits, labels)
         return loss

@@ -89,18 +89,19 @@ classifier.cuda()
 num_batch = len(dataset) / opt.batchSize
 
 
+wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 
-# wandb.init(project="pointnet",
-#            name="pointnet-classification",
-#            config={
-#                "architecture":"pointnet-classification",
-#                "epochs": opt.nepoch,
-#                "dataset":'ModelNet40'
-#            }
-#            )
-#
-# print('Iinitialization of wandb complete\n')
-#
+wandb.init(project="FFD_Contrast",
+           name="FFD_Contrast-classification",
+           config={
+               "architecture":"pointnet-classification",
+               "epochs": opt.nepoch,
+               "dataset":'ModelNet40'
+           }
+           )
+
+print('Iinitialization of wandb complete\n')
+
 
 cur_device = torch.cuda.current_device()
 
@@ -124,18 +125,32 @@ for epoch in range(opt.nepoch):
 
         optimizer.zero_grad()
         classifier = classifier.train()
-        F0,_,_ = classifier(points1)
-        F1,_,_ = classifier(points2)
-        F1,F0
+        F0,trans,trans_feat = classifier(points1)
+        F1,trans,trans_feat = classifier(points2)
+
 
         # random sample
         sampled_inds = np.random.choice(points1.size()[2], opt.num_points, replace=False)
-        q = F0[sampled_inds]
-        k = F1[sampled_inds]
+        # q = F0[sampled_inds]
+        # k = F1[sampled_inds]
 
 
         criterion = NCESoftmaxLoss().cuda()
-        loss = criterion(out, labels)
+        loss = criterion(F0, F1)
+
+        if opt.feature_transform:
+            loss += feature_transform_regularizer(trans_feat) * 0.001
+
+        loss.backward()
+        optimizer.step()
+
+        optimizer.step()
+
+
+
+        wandb.log({"train loss": loss.item(),
+                   "Train epoch": epoch})
+        print('[%d: %d/%d] train loss: %f' % (epoch, i, num_batch, loss.item()))
 
         #
 
