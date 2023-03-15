@@ -133,11 +133,6 @@ for epoch in range(opt.nepoch):
         q = F0[sampled_inds]
         k = F1[sampled_inds]
 
-        # pos logit
-        logits = torch.mm(q, k.transpose(1, 0))  # npos by npos
-        labels = torch.arange(opt.num_points).cuda().long()
-        out = torch.div(logits, self.T)
-        out = out.squeeze().contiguous()
 
         criterion = NCESoftmaxLoss().cuda()
         loss = criterion(out, labels)
