@@ -58,14 +58,16 @@ dataloader = torch.utils.data.DataLoader(
     batch_size=opt.batchSize,
     shuffle=True,
     num_workers=int(opt.workers),
-    # collate_fn=default_collate_pair_fn
+    drop_last=True
 )
 
 testdataloader = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=opt.batchSize,
         shuffle=True,
-        num_workers=int(opt.workers))
+        num_workers=int(opt.workers),
+        drop_last=True
+)
 
 print(len(dataset), len(test_dataset))
 num_classes = len(dataset.classes)
