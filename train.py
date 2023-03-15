@@ -23,7 +23,7 @@ parser.add_argument(
 parser.add_argument('--outf', type=str, default='cls', help='output folder')
 parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
-parser.add_argument('--dataset_type', type=str, default='shapenet', help="dataset type shapenet|modelnet40")
+parser.add_argument('--dataset_type', type=str, default='modelnet40', help="modelnet40")
 parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
 
 opt = parser.parse_args()
@@ -102,59 +102,78 @@ num_batch = len(dataset) / opt.batchSize
 
 
 for epoch in range(opt.nepoch):
+    """ contrastive learning """
     scheduler.step()
     for i, data in enumerate(dataloader, 0):
-        points, target = data  # points: 32 * 25000 *3  , target: 32 * 1 （batch size = 32）
-        points_set=
-        target = target[:, 0] # 32
-        points = points.transpose(2, 1) # 3 * 2500
-        points, target = points.cuda(), target.cuda()
+        input_dict = data  # points: 32 * 25000 *3  , target: 32 * 1 （batch size = 32）
+        pcd0 = input_dict['pcd0']
+        pcd1 = input_dict['pcd0']
+
+        N0, N1 = input_dict['pcd0'].shape[0], input_dict['pcd1'].shape[0]
+        pos_pairs = input_dict['correspondences'].cuda()
+
+        # points = points.transpose(2, 1) # 3 * 2500
+        points1, points2 = pcd0.cuda(), pcd1.cuda()
+
         optimizer.zero_grad()
         classifier = classifier.train()
-        pred, trans, trans_feat = classifier(points)
-        loss = F.nll_loss(pred, target)
-        if opt.feature_transform:
-            loss += feature_transform_regularizer(trans_feat) * 0.001
-        loss.backward()
-        optimizer.step()
-        pred_choice = pred.data.max(1)[1]
-        correct = pred_choice.eq(target.data).cpu().sum()
-        wandb.log({"train acc": correct.item() / float(opt.batchSize * 2500), "train loss": loss.item(),
-                   "Train epoch": epoch})
 
-        print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
-        # use test dataset per 10 times
-        if i % 10 == 0:
-            j, data = next(enumerate(testdataloader, 0))
-            points, target = data
-            target = target[:, 0]
-            points = points.transpose(2, 1)
-            points, target = points.cuda(), target.cuda()
-            classifier = classifier.eval()
-            pred, _, _ = classifier(points)
-            loss = F.nll_loss(pred, target)
-            pred_choice = pred.data.max(1)[1]
-            correct = pred_choice.eq(target.data).cpu().sum()
+        F0,_,_ = classifier(points1)
+        F1,_,_ = classifier(points2)
 
-            wandb.log({"val acc": correct.item() / float(opt.batchSize * 2500), "val loss": loss.item(),
-                       "val epoch": epoch})
-
-            print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-
-    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
-
-total_correct = 0
-total_testset = 0
-for i,data in tqdm(enumerate(testdataloader, 0)):
-    points, target = data
-    target = target[:, 0]
-    points = points.transpose(2, 1)
-    points, target = points.cuda(), target.cuda()
-    classifier = classifier.eval()
-    pred, _, _ = classifier(points)
-    pred_choice = pred.data.max(1)[1]
-    correct = pred_choice.eq(target.data).cpu().sum()
-    total_correct += correct.item()
-    total_testset += points.size()[0]
-
-print("final accuracy {}".format(total_correct / float(total_testset)))
+#         uniform = torch.distributions.Uniform(0, 1).sample([len(count)]).cuda()
+#         cums = torch.cat([torch.tensor([0], device=self.cur_device), torch.cumsum(count, dim=0)[0:-1]], dim=0)
+#         k_sel = pos_pairs[:, 1][off + cums]
+#
+#         q = F0[q_unique.long()]
+#         k = F1[k_sel.long()]
+#
+#         q_unique, count = pos_pairs[:, 0].unique(return_counts=True)
+#
+#         loss =
+#         loss = F.nll_loss(pred, target)
+#         if opt.feature_transform:
+#             loss += feature_transform_regularizer(trans_feat) * 0.001
+#         loss.backward()
+#         optimizer.step()
+#         pred_choice = pred.data.max(1)[1]
+#         correct = pred_choice.eq(target.data).cpu().sum()
+#         wandb.log({"train acc": correct.item() / float(opt.batchSize * 2500), "train loss": loss.item(),
+#                    "Train epoch": epoch})
+#
+#         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
+#         # use test dataset per 10 times
+#         if i % 10 == 0:
+#             j, data = next(enumerate(testdataloader, 0))
+#             points, target = data
+#             target = target[:, 0]
+#             points = points.transpose(2, 1)
+#             points, target = points.cuda(), target.cuda()
+#             classifier = classifier.eval()
+#             pred, _, _ = classifier(points)
+#             loss = F.nll_loss(pred, target)
+#             pred_choice = pred.data.max(1)[1]
+#             correct = pred_choice.eq(target.data).cpu().sum()
+#
+#             wandb.log({"val acc": correct.item() / float(opt.batchSize * 2500), "val loss": loss.item(),
+#                        "val epoch": epoch})
+#
+#             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
+#
+#     torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
+#
+# total_correct = 0
+# total_testset = 0
+# for i,data in tqdm(enumerate(testdataloader, 0)):
+#     points, target = data
+#     target = target[:, 0]
+#     points = points.transpose(2, 1)
+#     points, target = points.cuda(), target.cuda()
+#     classifier = classifier.eval()
+#     pred, _, _ = classifier(points)
+#     pred_choice = pred.data.max(1)[1]
+#     correct = pred_choice.eq(target.data).cpu().sum()
+#     total_correct += correct.item()
+#     total_testset += points.size()[0]
+#
+# print("final accuracy {}".format(total_correct / float(total_testset)))
