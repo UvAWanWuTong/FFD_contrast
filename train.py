@@ -94,7 +94,7 @@ num_batch = len(dataset) / opt.batchSize
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 
 wandb.init(project="FFD_Contrast",
-           name="FFD_Contrast-classification",
+           name="FFD_Contrast-classification-64",
            config={
                "architecture":"pointnet-classification",
                "epochs": opt.nepoch,
@@ -132,7 +132,7 @@ for epoch in range(opt.nepoch):
         # # k = F1[sampled_inds]
 
 
-        criterion = NCESoftmaxLoss().cuda()
+        criterion = NCESoftmaxLoss(batch_size=opt.batchSize,cur_device=cur_device).cuda()
         loss = criterion(F0, F1)
 
         if opt.feature_transform:
@@ -141,11 +141,9 @@ for epoch in range(opt.nepoch):
         loss.backward()
         optimizer.step()
 
-        optimizer.step()
-
-
-
         wandb.log({"train loss": loss.item(),
                    "Train epoch": epoch})
         print('[%d: %d/%d] train loss: %f' % (epoch, i, num_batch, loss.item()))
+
+    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 

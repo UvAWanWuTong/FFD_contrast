@@ -5,14 +5,16 @@ import torch.nn.functional as F
 from torch import nn
 
 class NCESoftmaxLoss(nn.Module):
-    def  __init__(self):
+    def  __init__(self, batch_size,cur_device):
         # keep code reptitive
         super(NCESoftmaxLoss,self).__init__()
-        self.device =     torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        self.device =  cur_device
         self.temperature = 0.07
         self.criterion = nn.CrossEntropyLoss()
-        self.batch_size = 32
+        self.batch_size = batch_size
         self.n_views = 2
+        self.batch_size = 32
+
 
 
 
