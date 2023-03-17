@@ -100,22 +100,72 @@ class Contrastive_ModelNetDataset(data.Dataset):
         if self.ffd:
             point_set1 = self.FreeFormDeformation(point_set)
             point_set2 = self.FreeFormDeformation(point_set)
-        #
-        # point_set1 = point_set1 - np.expand_dims(np.mean(point_set1, axis=0), 0)  # center
-        # point_set2 = point_set2 - np.expand_dims(np.mean(point_set2, axis=0), 0)  # center
+
+        point_set1 = point_set1 - np.expand_dims(np.mean(point_set1, axis=0), 0)  # center
+        point_set2 = point_set2 - np.expand_dims(np.mean(point_set2, axis=0), 0)  # center
 
         point_set1 = torch.from_numpy(point_set1.astype(np.float32))
         point_set2 = torch.from_numpy(point_set2.astype(np.float32))
 
-        matching_idx = np.column_stack((np.arange(point_set1.size()[0]), np.arange(point_set2.size()[0])))
-        cls = torch.from_numpy(np.array([cls]).astype(np.int64))
 
-        return (point_set1 , point_set2, matching_idx, cls)
+
+        return (point_set1 , point_set2)
 
 
     def __len__(self):
         return len(self.fns)
 
+
+class ModelNetDataset(data.Dataset):
+    def __init__(self,
+                 root,
+                 npoints=2500,
+                 split='train',
+                 data_augmentation=True):
+        self.npoints = npoints
+        self.root = root
+        self.split = split
+        self.data_augmentation = data_augmentation
+        self.fns = []
+        with open(os.path.join(root, '{}.txt'.format(self.split)), 'r') as f:
+            for line in f:
+                self.fns.append(line.strip())
+
+        self.cat = {}
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../ModelNet40/modelnet_id.txt'), 'r') as f:
+            for line in f:
+                ls = line.strip().split()
+                self.cat[ls[0]] = int(ls[1])
+
+        print(self.cat)
+        self.classes = list(self.cat.keys())
+
+    def __getitem__(self, index):
+        fn = self.fns[index]
+        cls = self.cat[fn.split('/')[0]]
+        with open(os.path.join(self.root, fn), 'rb') as f:
+            plydata = PlyData.read(f)
+        pts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
+        choice = np.random.choice(len(pts), self.npoints, replace=True)
+        point_set = pts[choice, :]
+
+        point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
+        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
+        point_set = point_set / dist  # scale
+
+        if self.data_augmentation:
+            theta = np.random.uniform(0, np.pi * 2)
+            rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+            point_set[:, [0, 2]] = point_set[:, [0, 2]].dot(rotation_matrix)  # random rotation
+            point_set += np.random.normal(0, 0.02, size=point_set.shape)  # random jitter
+
+        point_set = torch.from_numpy(point_set.astype(np.float32))
+        cls = torch.from_numpy(np.array([cls]).astype(np.int64))
+        return point_set, cls
+
+
+    def __len__(self):
+        return len(self.fns)
 
 
 
@@ -125,11 +175,10 @@ if __name__ == '__main__':
 
 
     if dataset == 'modelnet':
-        gen_modelnet_id(datapath)
-        d= ModelNetDataset(root=datapath)
+        Contrastive_ModelNetDataset(datapath)
+        d= Contrastive_ModelNetDataset(root=datapath)
         print(len(d))
         print(d[0])
-    collate_pair_fn = default_collate_pair_fn
     dataloader = torch.utils.data.DataLoader(d,batch_size=8,shuffle=True,num_workers=4,collate_fn=collate_pair_fn,drop_last=True)
     data_loader_iter = iter(dataloader)
     input_dict = next(data_loader_iter)

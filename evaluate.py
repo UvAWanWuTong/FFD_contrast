@@ -83,6 +83,7 @@ assert opt.model != '', "The model parameter should not be empty"
 
 classifier.load_state_dict(torch.load(opt.model))
 print('restore model successfully')
+
 parameters_ = []
 # freeze all layers but the last fc
 
@@ -101,19 +102,19 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
-#
-# wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-# wandb.init(project="FDD_Contrast-evaluation",
-#            name="pointnet",
-#            config={
-#                "architecture":"pointnet-classification",
-#                "epochs": opt.nepoch,
-#                "dataset":'ModelNet40'
-#            }
-#            )
-#
-# print('Iinitialization of wandb complete\n')
-#
+
+wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+wandb.init(project="FDD_Contrast-evaluation",
+           name="pointnet",
+           config={
+               "architecture":"pointnet-classification",
+               "epochs": opt.nepoch,
+               "dataset":'ModelNet40'
+           }
+           )
+
+print('Iinitialization of wandb complete\n')
+
 
 
 
