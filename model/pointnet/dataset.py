@@ -23,7 +23,7 @@ def gen_modelnet_id(root):
             f.write('{}\t{}\n'.format(classes[i], i))
 
 
-class ModelNetDataset(data.Dataset):
+class Contrastive_ModelNetDataset(data.Dataset):
     def __init__(self,
                  root,
                  npoints=2500,
@@ -117,54 +117,6 @@ class ModelNetDataset(data.Dataset):
         return len(self.fns)
 
 
-def default_collate_pair_fn(list_data):
-    xyz0, xyz1, matching_inds, cls = list(
-        zip(*list_data))
-    xyz_batch0, coords_batch0, feats_batch0 = [], [], []
-    xyz_batch1, coords_batch1, feats_batch1 = [], [], []
-    matching_inds_batch, class_batch, len_batch = [], [], []
-
-    batch_id = 0
-    curr_start_inds = np.zeros((1, 2))
-    for batch_id, _ in enumerate(xyz0):
-
-        N0 = xyz0[batch_id].shape[0]
-        N1 = xyz0[batch_id].shape[0]
-
-        # Move batchids to the beginning
-        xyz_batch0.append(xyz0[batch_id])
-        # coords_batch : batch id, x,y,z
-        xyz_batch1.append(xyz1[batch_id])
-
-
-        # in case 0 matching
-        if len(matching_inds[batch_id]) == 0:
-            matching_inds[batch_id].extend([0, 0])
-
-        matching_inds_batch.append(
-            torch.from_numpy(np.array(matching_inds[batch_id]) + curr_start_inds))
-        class_batch.append(cls[batch_id])
-
-        len_batch.append([N0, N1])
-
-
-
-        # Move the head
-        curr_start_inds[0, 0] += N0
-        curr_start_inds[0, 1] += N1
-
-    # Concatenate all lists
-    xyz_batch0 = torch.cat(xyz_batch0, 0).float()
-    xyz_batch1 = torch.cat(xyz_batch1, 0).float()
-    class_batch = torch.cat(class_batch, 0).float()
-    matching_inds_batch = torch.cat(matching_inds_batch, 0).int()
-    return {
-        'pcd0': xyz_batch0,
-        'pcd1': xyz_batch1,
-        'correspondences': matching_inds_batch,
-        'class':class_batch,
-        'len_batch': len_batch,
-    }
 
 
 if __name__ == '__main__':

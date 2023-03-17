@@ -4,7 +4,7 @@ import os
 import random
 import torch.optim as optim
 import torch.utils.data
-from model.pointnet.dataset import ModelNetDataset
+from model.pointnet.dataset import Contrastive_ModelNetDataset
 import numpy as np
 from model.pointnet.model import PointNetCls, feature_transform_regularizer
 from utils.criterion import  NCESoftmaxLoss
@@ -39,16 +39,10 @@ random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
 if opt.dataset_type == 'modelnet40':
-    dataset = ModelNetDataset(
+    dataset = Contrastive_ModelNetDataset(
         root=opt.dataset,
         npoints=opt.num_points,
         split='train')
-
-    test_dataset = ModelNetDataset(
-        root=opt.dataset,
-        split='test',
-        npoints=opt.num_points,
-        data_augmentation=False)
 else:
     exit('wrong dataset type')
 
@@ -62,17 +56,8 @@ dataloader = torch.utils.data.DataLoader(
 
 )
 
-testdataloader = torch.utils.data.DataLoader(
-        test_dataset,
-        batch_size=opt.batchSize,
-        shuffle=True,
-        num_workers=int(opt.workers),
-        drop_last=True
-)
 
-print(len(dataset), len(test_dataset))
-num_classes = len(dataset.classes)
-print('classes', num_classes)
+
 
 try:
     os.makedirs(opt.outf)
@@ -127,11 +112,6 @@ for epoch in range(opt.nepoch):
         F1,trans,trans_feat = classifier(points2)
 
 
-        # random sample
-        # sampled_inds = np.random.choice(points1.size()[2], opt.num_points, replace=False)
-        # # q = F0[sampled_inds]
-        # # k = F1[sampled_inds]
-
 
         criterion = NCESoftmaxLoss(batch_size=opt.batchSize,cur_device=cur_device).cuda()
         loss = criterion(F0, F1)
@@ -141,7 +121,10 @@ for epoch in range(opt.nepoch):
 
         loss.backward()
         optimizer.step()
-        #
+
+
+
+
         # wandb.log({"train loss": loss.item(),
         #            "Train epoch": epoch})
         print('[%d: %d/%d] train loss: %f' % (epoch, i, num_batch, loss.item()))

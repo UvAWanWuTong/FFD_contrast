@@ -6,12 +6,12 @@ import torch
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
-from pointnet.dataset import ShapeNetDataset, ModelNetDataset
-from pointnet.model import PointNetCls, feature_transform_regularizer
+from model.pointnet.dataset import ModelNetDataset
+from model.pointnet.model import PointNetCls, feature_transform_regularizer
 import torch.nn.functional as F
-import re
 from tqdm import tqdm
 import wandb
+import re
 
 
 parser = argparse.ArgumentParser()
@@ -86,12 +86,14 @@ print('restore model successfully')
 parameters_ = []
 # freeze all layers but the last fc
 
-# find all fc layer and free the rest of feature extraction layers
+# find last few fc layers and frozen the rest of feature extraction layers
 for name, param in classifier.named_parameters():
-    if re.match(r'^fc\d+\.(weight|bias)$',name):
+    if not re.match(r'^fc\d+\.(weight|bias)$',name):
                 param.requires_grad = False
                 parameters_.append(name)
 
+parameters = list(filter(lambda p: p.requires_grad, classifier.parameters()))
+assert len(parameters) == 6  # fc{1,2,3}.weight, fc{1,2,3}.bias
 
 
 optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
@@ -99,31 +101,25 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
-
-wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-wandb.init(project="FDD_Contrast-evaluation",
-           name="pointnet",
-           config={
-               "architecture":"pointnet-classification",
-               "epochs": opt.nepoch,
-               "dataset":'ModelNet40'
-           }
-           )
-
-print('Iinitialization of wandb complete\n')
-
-
-
-
-
-
+#
+# wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+# wandb.init(project="FDD_Contrast-evaluation",
+#            name="pointnet",
+#            config={
+#                "architecture":"pointnet-classification",
+#                "epochs": opt.nepoch,
+#                "dataset":'ModelNet40'
+#            }
+#            )
+#
+# print('Iinitialization of wandb complete\n')
+#
 
 
 
 
 
 for epoch in range(opt.nepoch):
-    scheduler.step()
     for i, data in enumerate(dataloader, 0):
         points, target = data
         target = target[:, 0]
@@ -137,6 +133,7 @@ for epoch in range(opt.nepoch):
             loss += feature_transform_regularizer(trans_feat) * 0.001
         loss.backward()
         optimizer.step()
+        scheduler.step()
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
         wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
