@@ -2,6 +2,7 @@
 
 
 
+#!/bin/bash
 
 python train.py \
 --dataset /home/wan/Datasets/ModelNet40 \
