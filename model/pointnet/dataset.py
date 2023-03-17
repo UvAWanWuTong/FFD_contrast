@@ -94,14 +94,15 @@ class ModelNetDataset(data.Dataset):
         point_set2 = point_set.copy()
 
 
-
         if self.data_augmentation:
             point_set1 = self.NormalDataAugmentation(point_set)
             point_set2 = self.NormalDataAugmentation(point_set)
         if self.ffd:
             point_set1 = self.FreeFormDeformation(point_set)
             point_set2 = self.FreeFormDeformation(point_set)
-
+        #
+        # point_set1 = point_set1 - np.expand_dims(np.mean(point_set1, axis=0), 0)  # center
+        # point_set2 = point_set2 - np.expand_dims(np.mean(point_set2, axis=0), 0)  # center
 
         point_set1 = torch.from_numpy(point_set1.astype(np.float32))
         point_set2 = torch.from_numpy(point_set2.astype(np.float32))

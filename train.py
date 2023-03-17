@@ -42,7 +42,7 @@ if opt.dataset_type == 'modelnet40':
     dataset = ModelNetDataset(
         root=opt.dataset,
         npoints=opt.num_points,
-        split='trainval')
+        split='train')
 
     test_dataset = ModelNetDataset(
         root=opt.dataset,
@@ -58,7 +58,8 @@ dataloader = torch.utils.data.DataLoader(
     batch_size=opt.batchSize,
     shuffle=True,
     num_workers=int(opt.workers),
-    drop_last=True
+    drop_last=True,
+
 )
 
 testdataloader = torch.utils.data.DataLoader(
@@ -94,7 +95,7 @@ num_batch = len(dataset) / opt.batchSize
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 
 wandb.init(project="FFD_Contrast",
-           name="FFD_Contrast-classification-64",
+           name="FFD_Contrast-classification-32",
            config={
                "architecture":"pointnet-classification",
                "epochs": opt.nepoch,
@@ -103,7 +104,7 @@ wandb.init(project="FFD_Contrast",
            )
 
 print('Iinitialization of wandb complete\n')
-
+print('current batch size',opt.batchSize)
 
 cur_device = torch.cuda.current_device()
 
@@ -140,9 +141,9 @@ for epoch in range(opt.nepoch):
 
         loss.backward()
         optimizer.step()
-
-        wandb.log({"train loss": loss.item(),
-                   "Train epoch": epoch})
+        #
+        # wandb.log({"train loss": loss.item(),
+        #            "Train epoch": epoch})
         print('[%d: %d/%d] train loss: %f' % (epoch, i, num_batch, loss.item()))
 
     torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))

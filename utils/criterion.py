@@ -13,7 +13,6 @@ class NCESoftmaxLoss(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.batch_size = batch_size
         self.n_views = 2
-        self.batch_size = 32
 
 
 
