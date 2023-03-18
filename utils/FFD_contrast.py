@@ -51,7 +51,6 @@ class FFD_contrast(object):
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.nepoch)
         save_checkpoint({
                 'epoch': self.args.nepoch,
-                'arch': self.args.arch,
                 'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
             }, is_best=True, filename=os.path.join(self.args.outf, checkpoint_name))
