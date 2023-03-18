@@ -21,7 +21,10 @@ class FFD_contrast(object):
         for epoch in tqdm(range(self.args.nepoch)):
             """ contrastive learning """
             counter = 0
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
             for data in  train_loader:
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).cuda()
@@ -50,7 +53,12 @@ class FFD_contrast(object):
             # save model checkpoints
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.nepoch)
         save_checkpoint({
+<<<<<<< HEAD
                 'epoch': self.args.nepoch,
+=======
+                'epoch': self.args.epochs,
+                'arch': self.args.arch,
+>>>>>>> origin/main
                 'state_dict': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
             }, is_best=True, filename=os.path.join(self.args.outf, checkpoint_name))
