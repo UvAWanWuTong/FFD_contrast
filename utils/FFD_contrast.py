@@ -21,10 +21,7 @@ class FFD_contrast(object):
         for epoch in tqdm(range(self.args.nepoch)):
             """ contrastive learning """
             counter = 0
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
             for data in  train_loader:
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).cuda()
