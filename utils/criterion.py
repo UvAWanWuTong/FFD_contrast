@@ -15,8 +15,6 @@ class NCESoftmaxLoss(nn.Module):
         self.n_views = 2
 
 
-
-
     def info_nce_loss(self, features):
         # fesatures.shape[512,128]
 
