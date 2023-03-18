@@ -126,11 +126,29 @@ class PointNetfeat(nn.Module):
             x = x.view(-1, 1024, 1).repeat(1, 1, n_pts)
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
-class PointNetCls(nn.Module):
-    def __init__(self, k=2, feature_transform=False):
-        super(PointNetCls, self).__init__()
+class Contrastive_PointNet(nn.Module):
+    def __init__(self, feature_transform=False):
+        super(Contrastive_PointNet, self).__init__()
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
+        # # self.fc1 = nn.Linear(1024, 1024)
+        # # self.relu = nn.ReLU()
+        # self.fc2 = nn.Linear(1024, 128)
+
+        self.fc1 = nn.Linear(1024, 128)
+
+
+    def forward(self, x):
+        x, trans, trans_feat = self.feat(x)
+        x = self.fc1(x)
+        return F.log_softmax(x, dim=1), trans, trans_feat
+
+
+class PointNetCls(nn.Module):
+    def __init__(self, backbone ,k=2, feature_transform=False):
+        super(PointNetCls, self).__init__()
+        # remove the linear projection layer
+        self.feature = nn.Sequential(*list(backbone.children())[:-1])
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, k)
@@ -140,27 +158,13 @@ class PointNetCls(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x, trans, trans_feat = self.feat(x)
+        x, trans, trans_feat = self.feature(x)
         x = F.relu(self.bn1(self.fc1(x)))
         x = F.relu(self.bn2(self.dropout(self.fc2(x))))
         x = self.fc3(x)
         return F.log_softmax(x, dim=1), trans, trans_feat
 
 
-class Contrastive_PointNet(nn.Module):
-    def __init__(self, feature_transform=False):
-        super(Contrastive_PointNet, self).__init__()
-        self.feature_transform = feature_transform
-        self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
-        self.fc1 = nn.Linear(1024, 1024)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(1024, 128)
-
-    def forward(self, x):
-        x, trans, trans_feat = self.feat(x)
-        x = self.fc1(x)
-        x = self.relu(self.fc2(x))
-        return F.log_softmax(x, dim=1), trans, trans_feat
 
 
 
@@ -192,16 +196,17 @@ if __name__ == '__main__':
     out, _, _ = pointfeat(sim_data)
     print('global feat', out.size())
 
+
     pointfeat = PointNetfeat(global_feat=False)
     out, _, _ = pointfeat(sim_data)
     print('point feat', out.size())
 
-    cls = PointNetCls(k = 5)
+
+
+    contrastice_pointnet = Contrastive_PointNet()
+
+    cls = PointNetCls(contrastice_pointnet, k=5)
     out, _, _ = cls(sim_data)
     print('class', out.size())
 
-    feature = Contrastive_PointNet()
-    out, _, _ = feature(sim_data)
-
-    print('class', out.size())
 

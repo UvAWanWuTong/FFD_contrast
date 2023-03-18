@@ -5,6 +5,7 @@ import os.path
 import torch
 import numpy as np
 import sys
+import math
 from tqdm import tqdm 
 import json
 import pygem
@@ -29,14 +30,22 @@ class Contrastive_ModelNetDataset(data.Dataset):
                  npoints=2500,
                  split='train',
                  data_augmentation=False,
-                 FFD = True):
-        self.num_points = 6
+                 FFD = True,
+                 ffd_points = 27,
+                 ffd_control= 6):
+
+        self.ffd_points = ffd_points
+        self.ffd_control= ffd_control
         self.ffd = FFD
         self.npoints = npoints
         self.root = root
         self.split = split
         self.data_augmentation = data_augmentation
         self.fns = []
+
+
+
+
         with open(os.path.join(root, '{}.txt'.format(self.split)), 'r') as f:
             for line in f:
                 self.fns.append(line.strip())
@@ -50,7 +59,10 @@ class Contrastive_ModelNetDataset(data.Dataset):
         print(self.cat)
         self.classes = list(self.cat.keys())
 
-    def FreeFormDeformation(self,point_set):
+
+
+    def Random_FreeFormDeformation(self,point_set):
+        # random control
         def random_move(ffd):
             # randomly move the control points of  the ffd
             ffd = ffd
@@ -60,10 +72,15 @@ class Contrastive_ModelNetDataset(data.Dataset):
             ffd.array_mu_z[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
             return ffd
 
-        # initialize the 27 control points with box length of 2
-        ffd = FFD([3, 3, 3])
+        # initialize the control space with box length of 2
+        # check if the control space is the cube
+        points = math.pow(self.ffd_points, 1 / 3)
+        assert points.is_integer(), \
+            "The control space should be the cube"
+
+        ffd = FFD([int(points), int(points), int(points)])
         ffd.box_length = [2, 2, 2]
-        for i in range(self.num_points):
+        for i in range(self.ffd_control):
              ffd = random_move(ffd)
 
         deformed_points = ffd(np.asarray(point_set)+1)
@@ -98,8 +115,8 @@ class Contrastive_ModelNetDataset(data.Dataset):
             point_set1 = self.NormalDataAugmentation(point_set)
             point_set2 = self.NormalDataAugmentation(point_set)
         if self.ffd:
-            point_set1 = self.FreeFormDeformation(point_set)
-            point_set2 = self.FreeFormDeformation(point_set)
+            point_set1 = self.Random_FreeFormDeformation(point_set)
+            point_set2 = self.Random_FreeFormDeformation(point_set)
 
         point_set1 = point_set1 - np.expand_dims(np.mean(point_set1, axis=0), 0)  # center
         point_set2 = point_set2 - np.expand_dims(np.mean(point_set2, axis=0), 0)  # center
