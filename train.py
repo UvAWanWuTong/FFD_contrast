@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument(
-    '--num_points', type=int, default=2500, help='input batch size')
+    '--num_points', type=int, default=3000, help='input batch size')
 parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
@@ -41,6 +41,12 @@ parser.add_argument(
                     help='Disable CUDA')
 parser.add_argument(
     '--lr',type=float, default = 0.001, help='learning rate')
+
+parser.add_argument(
+    '--ffd_points', type=int, default=27, help='number of ffd points' )
+parser.add_argument(
+    '--ffd_control', type=int, default=6, help='number of control points in ffd')
+
 
 
 
@@ -65,9 +71,14 @@ def main():
 
     if opt.dataset_type == 'modelnet40':
         dataset = Contrastive_ModelNetDataset(
+
             root=opt.dataset,
             npoints=opt.num_points,
-            split='train')
+            split='train',
+            ffd_points = opt.ffd_points,
+            ffd_control = opt.ffd_control
+
+        )
     else:
         exit('wrong dataset type')
 
@@ -108,16 +119,20 @@ def main():
         model.load_state_dict(torch.load(opt.model))
 
 
-    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-
-    wandb.init(project="FFD_Contrast",
-                   name="FFD_Contrast-32",
-                   config={
-                       "architecture":"pointnet-classification",
-                       "epochs": opt.nepoch,
-                       "dataset":'ModelNet40'
-                   }
-                   )
+    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    #
+    # wandb.init(project="FFD_Contrast",
+    #                name="FFD_Contrast-32",
+    #                config={
+    #
+    #                    "architecture":"pointnet-classification",
+    #                    "batch_size":opt.batchSize,
+    #                    "epochs": opt.nepoch,
+    #                    "dataset":'ModelNet40',
+    #                    "ffd_points" : opt.ffd_points,
+    #                    "ffd_control" : opt.ffd_control
+    #                }
+    #                )
 
     print('Iinitialization of wandb complete\n')
     print('current batch size',opt.batchSize)

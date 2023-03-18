@@ -16,13 +16,15 @@ class FFD_contrast(object):
         self.scheduler = kwargs['scheduler']
         self.writer = kwargs['writer']
         self.num_batch =  kwargs['num_batch']
+        self.min_loss = 1000
 
     def train(self,train_loader):
         for epoch in tqdm(range(self.args.nepoch)):
             """ contrastive learning """
             counter = 0
-
             for data in  train_loader:
+                # if counter>5:
+                #     break
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).cuda()
                 points2 = points2.transpose(2, 1).cuda()
@@ -40,21 +42,23 @@ class FFD_contrast(object):
                 self.optimizer.step()
                 self.scheduler.step()
 
-                self.writer.log({"train loss": loss.item(),
-                           "Train epoch": epoch,
-                           "Learning rate":self.scheduler.get_last_lr()[0]})
+                # self.writer.log({"train loss": loss.item(),
+                #            "Train epoch": epoch,
+                #            "Learning rate":self.scheduler.get_last_lr()[0]})
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 counter +=1
 
-        logging.info("Training has finished.")
-            # save model checkpoints
-        checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.nepoch)
-        save_checkpoint({
-                'epoch': self.args.nepoch,
-                'state_dict': self.model.state_dict(),
-                'optimizer': self.optimizer.state_dict(),
-            }, is_best=True, filename=os.path.join(self.args.outf, checkpoint_name))
-        logging.info(f"Model checkpoint and metadata has been saved at {self.args.outf}.")
+            if loss < self.min_loss:
+                # save the best model checkpoints
+                print('Save best model......')
+                checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.nepoch)
+                save_checkpoint({
+                    'epoch': self.args.nepoch,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best=True, filename=os.path.join(self.args.outf, checkpoint_name))
+                logging.info(f"Model checkpoint and metadata has been saved at {self.args.outf}.")
+                self.min_loss = loss
 
 
 
