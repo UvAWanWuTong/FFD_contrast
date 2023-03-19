@@ -45,6 +45,18 @@ class PointSampler(object):
         return sampled_points
 
 
+
+class RandomSampler(object):
+    def __init__(self,output_size):
+        self.output_size = output_size
+
+    def __call__(self, point_set):
+        choice = np.random.choice(len(point_set),   self.output_size, replace=True)
+        point_set = point_set[choice, :]
+
+        return point_set
+
+
 class Normalize(object):
     def __call__(self, pointcloud):
         assert len(pointcloud.shape) == 2

@@ -1,6 +1,7 @@
 from __future__ import print_function
 import torch.utils.data as data
 import os
+os.chdir(os.path.dirname(__file__))
 import os.path
 import torch
 import numpy as np
@@ -11,7 +12,7 @@ import json
 import pygem
 from pygem import FFD
 from plyfile import PlyData, PlyElement
-
+from utils.sampler import PointSampler,Normalize,RandomSampler
 
 def gen_modelnet_id(root):
     classes = []
@@ -68,7 +69,7 @@ class Contrastive_ModelNetDataset(data.Dataset):
             ffd = ffd
             point = np.random.randint(0, 3, size=[3])
             ffd.array_mu_x[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
-            ffd.array_mu_z[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
+            ffd.array_mu_y[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
             ffd.array_mu_z[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
             return ffd
 
@@ -87,10 +88,13 @@ class Contrastive_ModelNetDataset(data.Dataset):
 
         return deformed_points-1
     def NormalDataAugmentation(self,point_set):
+        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
+        point_set = point_set / dist  # scale
         theta = np.random.uniform(0, np.pi * 2)
         rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
         point_set[:, [0, 2]] = point_set[:, [0, 2]].dot(rotation_matrix)  # random rotation
         point_set += np.random.normal(0, 0.02, size=point_set.shape)  # random jitter
+
         return point_set
 
 
@@ -99,13 +103,14 @@ class Contrastive_ModelNetDataset(data.Dataset):
         cls = self.cat[fn.split('/')[0]]
         with open(os.path.join(self.root, fn), 'rb') as f:
             plydata = PlyData.read(f)
-        pts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
-        choice = np.random.choice(len(pts), self.npoints, replace=True)
-        point_set = pts[choice, :]
+        verts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
+        face = plydata['face']['vertex_index'].T
 
-        point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
-        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
-        point_set = point_set / dist  # scale
+        point_set = PointSampler(self.npoints)((verts, face))
+        # point_set = RandomSampler(self.npoints)(verts)
+        point_set = Normalize()(point_set)
+
+
 
         point_set1 = point_set.copy()
         point_set2 = point_set.copy()
@@ -118,8 +123,9 @@ class Contrastive_ModelNetDataset(data.Dataset):
             point_set1 = self.Random_FreeFormDeformation(point_set)
             point_set2 = self.Random_FreeFormDeformation(point_set)
 
-        point_set1 = point_set1 - np.expand_dims(np.mean(point_set1, axis=0), 0)  # center
-        point_set2 = point_set2 - np.expand_dims(np.mean(point_set2, axis=0), 0)  # center
+        point_set1 = Normalize()(point_set1)
+        point_set2 = Normalize()(point_set2)
+
 
         point_set1 = torch.from_numpy(point_set1.astype(np.float32))
         point_set2 = torch.from_numpy(point_set2.astype(np.float32))
@@ -196,7 +202,7 @@ if __name__ == '__main__':
         d= Contrastive_ModelNetDataset(root=datapath)
         print(len(d))
         print(d[0])
-    dataloader = torch.utils.data.DataLoader(d,batch_size=8,shuffle=True,num_workers=4,collate_fn=collate_pair_fn,drop_last=True)
+    dataloader = torch.utils.data.DataLoader(d,batch_size=8,shuffle=True,num_workers=4,drop_last=True)
     data_loader_iter = iter(dataloader)
     input_dict = next(data_loader_iter)
     print(input_dict)

@@ -9,10 +9,7 @@ from model.pointnet.model import Contrastive_PointNet, feature_transform_regular
 from utils.criterion import  NCESoftmaxLoss
 from utils.FFD_contrast import FFD_contrast
 import torch.backends.cudnn as cudnn
-
 import tqdm
-
-
 import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
@@ -37,7 +34,7 @@ parser.add_argument(
 parser.add_argument(
     '--feature_transform',default= False, action='store_true', help="use feature transform")
 parser.add_argument(
-    '--disable-cuda', default=False,action='store_true',
+    '--disable_cuda', default=False,action='store_true',
                     help='Disable CUDA')
 parser.add_argument(
     '--lr',type=float, default = 0.001, help='learning rate')
@@ -98,20 +95,12 @@ def main():
 
 
 
-
     model = Contrastive_PointNet(feature_transform=opt.feature_transform)
 
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
-    # optimizer = optim.SGD(
-    #     model.parameters(),
-    #     lr=opt.lr,
-    #     momentum=0.8,
-    #     weight_decay=1e-4)
-    #
-    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
     num_batch = len(dataset) / opt.batchSize
 
@@ -119,25 +108,26 @@ def main():
         model.load_state_dict(torch.load(opt.model))
 
 
-    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    #
-    # wandb.init(project="FFD_Contrast",
-    #                name="FFD_Contrast-32",
-    #                config={
-    #
-    #                    "architecture":"pointnet-classification",
-    #                    "batch_size":opt.batchSize,
-    #                    "epochs": opt.nepoch,
-    #                    "dataset":'ModelNet40',
-    #                    "ffd_points" : opt.ffd_points,
-    #                    "ffd_control" : opt.ffd_control
-    #                }
-    #                )
+    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    wandb.init(project="FFD_Contrast",
+                       name="FFD_Contrast-32",
+                       config={
 
-    print('Iinitialization of wandb complete\n')
+                           "architecture":"pointnet-classification",
+                           "batch_size":opt.batchSize,
+                           "epochs": opt.nepoch,
+                           "dataset":'ModelNet40',
+                           "ffd_points" : opt.ffd_points,
+                           "ffd_control" : opt.ffd_control
+                       }
+                       )
+
+
+    print('Iinitialization of logger complete\n')
+
+
+
     print('current batch size',opt.batchSize)
-
-
     ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
     ffd_contrast.train(train_dataloader)
 
