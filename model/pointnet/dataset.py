@@ -97,7 +97,6 @@ class Contrastive_ModelNetDataset(data.Dataset):
 
         return point_set
 
-
     def __getitem__(self, index):
         fn = self.fns[index]
         cls = self.cat[fn.split('/')[0]]

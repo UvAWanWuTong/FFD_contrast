@@ -118,8 +118,6 @@ print('Iinitialization of wandb complete\n')
 
 
 
-
-
 for epoch in range(opt.nepoch):
     for i, data in enumerate(dataloader, 0):
         points, target = data
