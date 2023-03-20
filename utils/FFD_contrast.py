@@ -53,8 +53,6 @@ class FFD_contrast(object):
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 counter +=1
-
-
             if epoch_loss/self.num_batch < self.min_loss:
                 # save the best model checkpoints
                 print('Save best model......')

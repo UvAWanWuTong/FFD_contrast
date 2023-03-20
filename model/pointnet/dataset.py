@@ -143,7 +143,7 @@ class ModelNetDataset(data.Dataset):
                  root,
                  npoints=2500,
                  split='train',
-                 data_augmentation=True):
+                 data_augmentation=False):
         self.npoints = npoints
         self.root = root
         self.split = split
@@ -168,12 +168,23 @@ class ModelNetDataset(data.Dataset):
         with open(os.path.join(self.root, fn), 'rb') as f:
             plydata = PlyData.read(f)
         pts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
-        choice = np.random.choice(len(pts), self.npoints, replace=True)
-        point_set = pts[choice, :]
+
+
+        # face = plydata['face']['vertex_index'].T
+        # point_set = PointSampler(self.npoints)((pts, face))
+
+        point_set = RandomSampler(self.npoints)(pts)
 
         point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
         dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
         point_set = point_set / dist  # scale
+        point_set = Normalize()(point_set) #normolize
+
+
+
+
+
+
 
         if self.data_augmentation:
             theta = np.random.uniform(0, np.pi * 2)

@@ -12,7 +12,9 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
 import re
-
+import torch.backends.cudnn as cudnn
+from utils.sampler import Normalize
+from utils.utils import  save_checkpoint
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -28,6 +30,23 @@ parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
 parser.add_argument('--dataset_type', type=str, default='shapenet', help="dataset type shapenet|modelnet40")
 parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
+parser.add_argument(
+    '--disable_cuda', default=False,action='store_true',
+                    help='Disable CUDA')
+
+opt = parser.parse_args()
+print(opt)
+if not opt.disable_cuda and torch.cuda.is_available():
+    opt.device = torch.device('cuda')
+    cudnn.deterministic = True
+    cudnn.benchmark = True
+else:
+    opt.device = torch.device('cpu')
+    opt.gpu_index = -1
+
+print('Now use the device', opt.device)
+
+
 
 opt = parser.parse_args()
 print(opt)
@@ -81,7 +100,7 @@ classifier = PointNetCls(k=num_classes, feature_transform=opt.feature_transform)
 
 assert opt.model != '', "The model parameter should not be empty"
 
-classifier.load_state_dict(torch.load(opt.model))
+classifier.load_state_dict(torch.load(opt.model)['state_dict'],strict=False)
 print('restore model successfully')
 
 parameters_ = []
@@ -103,6 +122,12 @@ classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
 
+
+
+min_loss = 1000
+
+
+
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 wandb.init(project="FDD_Contrast-evaluation",
            name="pointnet",
@@ -117,11 +142,11 @@ print('Iinitialization of wandb complete\n')
 
 
 
-
 for epoch in range(opt.nepoch):
+
     for i, data in enumerate(dataloader, 0):
         points, target = data
-        target = target[:, 0]
+        target = target[:, 0].to()
         points = points.transpose(2, 1)
         points, target = points.cuda(), target.cuda()
         optimizer.zero_grad()
@@ -140,6 +165,7 @@ for epoch in range(opt.nepoch):
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
 
         if i % 10 == 0:
+            val_loss = 0
             j, data = next(enumerate(testdataloader, 0))
             points, target = data
             target = target[:, 0]
@@ -153,8 +179,18 @@ for epoch in range(opt.nepoch):
             wandb.log({"val acc": correct.item() / float(opt.batchSize), "val loss": loss.item()})
 
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-
-    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
+            if i % 100 == 0 and val_loss < min_loss:
+                # save the best model checkpoints
+                print('Save best model......')
+                checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
+                save_checkpoint({
+                    'current_epoch': epoch,
+                    'epoch': opt.nepoch,
+                    'state_dict': classifier.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                }, is_best=True, filename=os.path.join(opt.outf, checkpoint_name))
+                min_loss = val_loss
+    # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
 
 total_correct = 0
@@ -173,3 +209,4 @@ for i,data in tqdm(enumerate(testdataloader, 0)):
     total_testset += points.size()[0]
 
 print("final accuracy {}".format(total_correct / float(total_testset)))
+wandb.log({"final accuracy": total_correct / float(total_testset)})

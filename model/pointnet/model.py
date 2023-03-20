@@ -145,23 +145,24 @@ class Contrastive_PointNet(nn.Module):
 
 
 class PointNetCls(nn.Module):
-    def __init__(self, backbone ,k=2, feature_transform=False):
+    def __init__(self, k=2, feature_transform=False):
         super(PointNetCls, self).__init__()
         # remove the linear projection layer
-        self.feature = nn.Sequential(*list(backbone.children())[:-1])
-        self.fc1 = nn.Linear(1024, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, k)
+        self.feature_transform = feature_transform
+        self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
+        self.fc2 = nn.Linear(1024, 512)
+        self.fc3 = nn.Linear(512, 256)
+        self.fc4 = nn.Linear(256, k)
         self.dropout = nn.Dropout(p=0.3)
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x, trans, trans_feat = self.feature(x)
-        x = F.relu(self.bn1(self.fc1(x)))
-        x = F.relu(self.bn2(self.dropout(self.fc2(x))))
-        x = self.fc3(x)
+        x, trans, trans_feat = self.feat(x)
+        x = F.relu(self.bn1(self.fc2(x)))
+        x = F.relu(self.bn2(self.dropout(self.fc3(x))))
+        x = self.fc4(x)
         return F.log_softmax(x, dim=1), trans, trans_feat
 
 
@@ -203,9 +204,9 @@ if __name__ == '__main__':
 
 
 
-    contrastice_pointnet = Contrastive_PointNet()
+    contrastive_pointnet = Contrastive_PointNet()
 
-    cls = PointNetCls(contrastice_pointnet, k=5)
+    cls = PointNetCls(k=5)
     out, _, _ = cls(sim_data)
     print('class', out.size())
 
