@@ -105,8 +105,8 @@ class Contrastive_ModelNetDataset(data.Dataset):
         verts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
         face = plydata['face']['vertex_index'].T
 
-        point_set = PointSampler(self.npoints)((verts, face))
-        # point_set = RandomSampler(self.npoints)(verts)
+        # point_set = PointSampler(self.npoints)((verts, face))
+        point_set = RandomSampler(self.npoints)(verts)
         point_set = Normalize()(point_set)
 
 
@@ -167,17 +167,17 @@ class ModelNetDataset(data.Dataset):
         cls = self.cat[fn.split('/')[0]]
         with open(os.path.join(self.root, fn), 'rb') as f:
             plydata = PlyData.read(f)
-        pts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
+        verts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
 
 
         # face = plydata['face']['vertex_index'].T
-        # point_set = PointSampler(self.npoints)((pts, face))
+        # point_set = PointSampler(self.npoints)((verts, face))
 
-        point_set = RandomSampler(self.npoints)(pts)
+        point_set = RandomSampler(self.npoints)(verts)
 
-        point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
-        dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
-        point_set = point_set / dist  # scale
+        # point_set = point_set - np.expand_dims(np.mean(point_set, axis=0), 0)  # center
+        # dist = np.max(np.sqrt(np.sum(point_set ** 2, axis=1)), 0)
+        # point_set = point_set / dist  # scale
         point_set = Normalize()(point_set) #normolize
 
 

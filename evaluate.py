@@ -179,17 +179,17 @@ for epoch in range(opt.nepoch):
             wandb.log({"val acc": correct.item() / float(opt.batchSize), "val loss": loss.item()})
 
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-            if i % 100 == 0 and val_loss < min_loss:
-                # save the best model checkpoints
-                print('Save best model......')
-                checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
-                save_checkpoint({
-                    'current_epoch': epoch,
-                    'epoch': opt.nepoch,
-                    'state_dict': classifier.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                }, is_best=True, filename=os.path.join(opt.outf, checkpoint_name))
-                min_loss = val_loss
+    if epoch % 2 == 0:
+        # save the best model checkpoints
+        print('Save check points.....')
+        checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
+        save_checkpoint({
+            'current_epoch': epoch,
+            'epoch': opt.nepoch,
+            'state_dict': classifier.state_dict(),
+            'optimizer': optimizer.state_dict(),
+        }, is_best=False, filename=os.path.join(opt.outf, checkpoint_name))
+        min_loss = val_loss
     # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
 

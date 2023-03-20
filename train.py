@@ -43,8 +43,8 @@ parser.add_argument(
     '--ffd_points', type=int, default=27, help='number of ffd points' )
 parser.add_argument(
     '--ffd_control', type=int, default=6, help='number of control points in ffd')
-
-
+parser.add_argument(
+    '--step_size', type=int, default=200, help='step size of learning rate decay')
 
 
 def main():
@@ -99,20 +99,21 @@ def main():
 
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=0.5)
 
 
     num_batch = len(dataset) / opt.batchSize
 
     if opt.model != '':
-        model.load_state_dict(torch.load(opt.model))
-
+        model.load_state_dict(torch.load(opt.model)['state_dict'])
+        optimizer.load_state_dict(torch.load(opt.model)['optimizer'])
+        print('restore successful')
+        print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
     wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
     wandb.init(project="FFD_Contrast",
                        name="FFD_Contrast-32",
                        config={
-
                            "architecture":"pointnet-classification",
                            "batch_size":opt.batchSize,
                            "epochs": opt.nepoch,
@@ -130,6 +131,7 @@ def main():
     print('current batch size',opt.batchSize)
     ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
     ffd_contrast.train(train_dataloader)
+
 
 
 if __name__ == "__main__":
