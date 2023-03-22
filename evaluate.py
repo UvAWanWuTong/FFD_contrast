@@ -25,10 +25,10 @@ parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
-parser.add_argument('--outf', type=str, default='cls_eval', help='output folder')
+parser.add_argument('--outf', type=str, default='checkpoint_eval', help='output folder')
 parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
-parser.add_argument('--dataset_type', type=str, default='shapenet', help="dataset type shapenet|modelnet40")
+parser.add_argument('--dataset_type', type=str, default='modelnet40', help="dataset type shapenet|modelnet40")
 parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
 parser.add_argument(
     '--disable_cuda', default=False,action='store_true',
@@ -117,7 +117,7 @@ assert len(parameters) == 6  # fc{1,2,3}.weight, fc{1,2,3}.bias
 
 
 optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.8)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
@@ -161,7 +161,7 @@ for epoch in range(opt.nepoch):
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
         wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
-                   "Train epoch": epoch})
+                   "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
 
         if i % 10 == 0:
@@ -181,17 +181,22 @@ for epoch in range(opt.nepoch):
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
     if epoch % 2 == 0:
         # save the best model checkpoints
-        print('Save check points.....')
+        if val_loss / float(opt.batchSize) < min_loss:
+            is_bset = True
+            print('Save Best evaluation model.......')
+        else:
+            is_bset = False
+            print('Save check points......')
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
         save_checkpoint({
             'current_epoch': epoch,
             'epoch': opt.nepoch,
             'state_dict': classifier.state_dict(),
             'optimizer': optimizer.state_dict(),
-        }, is_best=False, filename=os.path.join(opt.outf, checkpoint_name))
-        min_loss = val_loss
-    # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
+        }, is_best=is_bset, filename=os.path.join(opt.outf, checkpoint_name), is_eval=True)
+        min_loss = loss
 
+    # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
 total_correct = 0
 total_testset = 0

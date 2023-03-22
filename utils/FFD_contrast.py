@@ -25,8 +25,8 @@ class FFD_contrast(object):
             counter = 0
             epoch_loss = 0
             for data in  train_loader:
-                if counter>5:
-                    break
+                # if counter>5:
+                #     break
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).to(self.args.device)
                 points2 = points2.transpose(2, 1).to(self.args.device)
@@ -45,15 +45,15 @@ class FFD_contrast(object):
                 self.scheduler.step()
 
 
-                #
-                # self.writer.log({
-                #                "train loss": loss.item(),
-                #                "Train epoch": epoch,
-                #                "Learning rate":self.scheduler.get_last_lr()[0]})
+
+                self.writer.log({
+                               "train loss": loss.item(),
+                               "Train epoch": epoch,
+                               "Learning rate":self.scheduler.get_last_lr()[0]})
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 counter +=1
-            if epoch % 3 ==0:
+            if epoch % 2 ==0:
                 # save the best model checkpoints
                 if epoch_loss / self.num_batch < self.min_loss:
                         is_bset = True

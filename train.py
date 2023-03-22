@@ -24,7 +24,7 @@ parser.add_argument(
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument(
-    '--outf', type=str, default='cls', help='output folder')
+    '--outf', type=str, default='checkpoints', help='output folder')
 parser.add_argument(
     '--model', type=str, default='', help='model path')
 parser.add_argument(
@@ -99,29 +99,28 @@ def main():
 
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=0.5)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=0.8)
 
 
     num_batch = len(dataset) / opt.batchSize
 
     if opt.model != '':
         model.load_state_dict(torch.load(opt.model)['state_dict'])
-        optimizer.load_state_dict(torch.load(opt.model)['optimizer'])
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast",
-                       name="FFD_Contrast-32",
-                       config={
-                           "architecture":"pointnet-classification",
-                           "batch_size":opt.batchSize,
-                           "epochs": opt.nepoch,
-                           "dataset":'ModelNet40',
-                           "ffd_points" : opt.ffd_points,
-                           "ffd_control" : opt.ffd_control
-                       }
-                       )
+    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    # wandb.init(project="FFD_Contrast",
+    #                    name="FFD_Contrast-32",
+    #                    config={
+    #                        "architecture":"pointnet-classification",
+    #                        "batch_size":opt.batchSize,
+    #                        "epochs": opt.nepoch,
+    #                        "dataset":'ModelNet40',
+    #                        "ffd_points" : opt.ffd_points,
+    #                        "ffd_control" : opt.ffd_control
+    #                    }
+    #                    )
 
 
     print('Iinitialization of logger complete\n')

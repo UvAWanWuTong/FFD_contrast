@@ -5,10 +5,13 @@ import torch
 import yaml
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',is_eval=False):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        if is_eval:
+            shutil.copyfile(filename,'model_best_eval.pth.tar')
+        else:
+            shutil.copyfile(filename, 'model_best_train.pth.tar')
 
 
 def save_config_file(model_checkpoints_folder, args):
