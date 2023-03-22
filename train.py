@@ -24,7 +24,9 @@ parser.add_argument(
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument(
-    '--outf', type=str, default='checkpoints', help='output folder')
+    '--outf', type=str, default='checkpoints_train', help='output folder')
+parser.add_argument(
+    '--outf_best', type=str, default='best_train', help='output folder')
 parser.add_argument(
     '--model', type=str, default='', help='model path')
 parser.add_argument(
@@ -46,10 +48,16 @@ parser.add_argument(
 parser.add_argument(
     '--step_size', type=int, default=200, help='step size of learning rate decay')
 
+parser.add_argument(
+    '--decay', type=int, default=0.8, help='lr decay  ')
+
+
 
 def main():
     opt = parser.parse_args()
-    print(opt)
+    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast(random:{ffd_points},{ffd_control})_train-{batchSize}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+    print(opt.expriment_name)
     if not opt.disable_cuda and torch.cuda.is_available():
         opt.device = torch.device('cuda')
         cudnn.deterministic = True
@@ -73,7 +81,7 @@ def main():
             npoints=opt.num_points,
             split='train',
             ffd_points = opt.ffd_points,
-            ffd_control = opt.ffd_control
+            ffd_control = opt.ffd_control,
 
         )
     else:
@@ -99,7 +107,7 @@ def main():
 
     optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=0.8)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
 
 
     num_batch = len(dataset) / opt.batchSize
@@ -111,15 +119,18 @@ def main():
 
     wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
     wandb.init(project="FFD_Contrast",
-                       name="FFD_Contrast-32",
+                       name=opt.expriment_name,
                        config={
                            "architecture":"pointnet-classification",
                            "batch_size":opt.batchSize,
                            "epochs": opt.nepoch,
                            "dataset":'ModelNet40',
                            "ffd_points" : opt.ffd_points,
-                           "ffd_control" : opt.ffd_control
-                       }
+                           "ffd_control" : opt.ffd_control,
+                           "lr" : opt.lr,
+                           "step_size" : opt.step_size,
+                           "decay" : opt.decay
+    }
                        )
 
 

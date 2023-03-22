@@ -25,7 +25,8 @@ parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
-parser.add_argument('--outf', type=str, default='checkpoint_eval', help='output folder')
+parser.add_argument('--outf', type=str, default='checkpoints_eval', help='output  folder')
+parser.add_argument('--outf_best', type=str, default='best_eval', help='output best folder')
 parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
 parser.add_argument('--dataset_type', type=str, default='modelnet40', help="dataset type shapenet|modelnet40")
@@ -33,9 +34,26 @@ parser.add_argument('--feature_transform', action='store_true', help="use featur
 parser.add_argument(
     '--disable_cuda', default=False,action='store_true',
                     help='Disable CUDA')
+parser.add_argument(
+    '--lr',type=float, default = 0.001, help='learning rate')
+
+parser.add_argument(
+    '--step_size', type=int, default=200, help='step size of learning rate decay')
+
+parser.add_argument(
+    '--decay', type=int, default=0.8, help='lr decay  ')
+
+parser.add_argument(
+    '--expriment_name', type=str, default='FFD_contrast', help='the name of current expriment ')
+
+
+
 
 opt = parser.parse_args()
-print(opt)
+expriment_name = str(opt.lr) + '_' + str(opt.decay) + "FFD_Contrast_eval" + "-" + str(opt.batchSize)
+
+
+
 if not opt.disable_cuda and torch.cuda.is_available():
     opt.device = torch.device('cuda')
     cudnn.deterministic = True
@@ -116,8 +134,8 @@ parameters = list(filter(lambda p: p.requires_grad, classifier.parameters()))
 assert len(parameters) == 6  # fc{1,2,3}.weight, fc{1,2,3}.bias
 
 
-optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=200, gamma=0.8)
+optimizer = optim.Adam(classifier.parameters(), lr=opt.lr, betas=(0.9, 0.999))
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
@@ -179,21 +197,23 @@ for epoch in range(opt.nepoch):
             wandb.log({"val acc": correct.item() / float(opt.batchSize), "val loss": loss.item()})
 
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-    if epoch % 2 == 0:
+    if epoch % 3 == 0:
         # save the best model checkpoints
         if val_loss / float(opt.batchSize) < min_loss:
-            is_bset = True
+            is_best = True
             print('Save Best evaluation model.......')
+
         else:
-            is_bset = False
+            is_best = False
             print('Save check points......')
+
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
         save_checkpoint({
             'current_epoch': epoch,
             'epoch': opt.nepoch,
             'state_dict': classifier.state_dict(),
             'optimizer': optimizer.state_dict(),
-        }, is_best=is_bset, filename=os.path.join(opt.outf, checkpoint_name), is_eval=True)
+        }, is_best=is_best, filename=os.path.join(opt.outf, checkpoint_name),best_filename=os.path.join(opt.outf_best, 'best_'+checkpoint_name))
         min_loss = loss
 
     # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
