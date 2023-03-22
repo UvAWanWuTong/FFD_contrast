@@ -109,18 +109,18 @@ def main():
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    # wandb.init(project="FFD_Contrast",
-    #                    name="FFD_Contrast-32",
-    #                    config={
-    #                        "architecture":"pointnet-classification",
-    #                        "batch_size":opt.batchSize,
-    #                        "epochs": opt.nepoch,
-    #                        "dataset":'ModelNet40',
-    #                        "ffd_points" : opt.ffd_points,
-    #                        "ffd_control" : opt.ffd_control
-    #                    }
-    #                    )
+    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    wandb.init(project="FFD_Contrast",
+                       name="FFD_Contrast-32",
+                       config={
+                           "architecture":"pointnet-classification",
+                           "batch_size":opt.batchSize,
+                           "epochs": opt.nepoch,
+                           "dataset":'ModelNet40',
+                           "ffd_points" : opt.ffd_points,
+                           "ffd_control" : opt.ffd_control
+                       }
+                       )
 
 
     print('Iinitialization of logger complete\n')
