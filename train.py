@@ -38,16 +38,15 @@ parser.add_argument(
 parser.add_argument(
     '--disable_cuda', default=False,action='store_true',
                     help='Disable CUDA')
+
 parser.add_argument(
     '--lr',type=float, default = 0.001, help='learning rate')
-
 parser.add_argument(
     '--ffd_points', type=int, default=27, help='number of ffd points' )
 parser.add_argument(
     '--ffd_control', type=int, default=6, help='number of control points in ffd')
 parser.add_argument(
     '--step_size', type=int, default=200, help='step size of learning rate decay')
-
 parser.add_argument(
     '--decay', type=float, default=0.8, help='lr decay  ')
 
