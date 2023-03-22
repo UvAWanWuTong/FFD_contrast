@@ -49,7 +49,7 @@ parser.add_argument(
     '--step_size', type=int, default=200, help='step size of learning rate decay')
 
 parser.add_argument(
-    '--decay', type=int, default=0.8, help='lr decay  ')
+    '--decay', type=float, default=0.8, help='lr decay  ')
 
 
 
