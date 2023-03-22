@@ -25,8 +25,6 @@ class FFD_contrast(object):
             counter = 0
             epoch_loss = 0
             for data in  train_loader:
-                if counter>3:
-                    break
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).to(self.args.device)
                 points2 = points2.transpose(2, 1).to(self.args.device)
