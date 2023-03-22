@@ -50,7 +50,12 @@ parser.add_argument(
 
 
 opt = parser.parse_args()
-expriment_name = str(opt.lr) + '_' + str(opt.decay) + "FFD_Contrast_eval" + "-" + str(opt.batchSize)
+opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast(random:{ffd_points},{ffd_control})_train-{batchSize}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+if not os.path.exists(os.path.join(opt.outf, opt.expriment_name)):
+    os.makedirs(os.path.join(opt.outf, opt.expriment_name))
+
+opt.save_path = os.path.join(opt.outf, opt.expriment_name)
 
 
 
@@ -207,13 +212,13 @@ for epoch in range(opt.nepoch):
             is_best = False
             print('Save check points......')
 
-        checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(opt.nepoch)
+        checkpoint_name = 'checkpoint_{}.pth.tar'.format(epoch)
         save_checkpoint({
             'current_epoch': epoch,
             'epoch': opt.nepoch,
             'state_dict': classifier.state_dict(),
             'optimizer': optimizer.state_dict(),
-        }, is_best=is_best, filename=os.path.join(opt.outf, checkpoint_name),best_filename=os.path.join(opt.outf_best, 'best_'+checkpoint_name))
+        }, is_best=is_best, filename=checkpoint_name,file_dir=opt.save_path)
         min_loss = loss
 
     # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))

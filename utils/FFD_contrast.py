@@ -25,6 +25,7 @@ class FFD_contrast(object):
             counter = 0
             epoch_loss = 0
             for data in  train_loader:
+
                 points1, points2 = data
                 points1 = points1.transpose(2, 1).to(self.args.device)
                 points2 = points2.transpose(2, 1).to(self.args.device)
@@ -51,7 +52,7 @@ class FFD_contrast(object):
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 counter +=1
-            if epoch % 3 ==0:
+            if epoch % 1 ==0:
                 # save the best model checkpoints
                 if epoch_loss / self.num_batch < self.min_loss:
                         is_best = True
@@ -60,12 +61,12 @@ class FFD_contrast(object):
                         is_best = False
                         print('Save check points......')
 
-                checkpoint_name = '{}.pth.tar'.format(self.args.expriment_name)
+                checkpoint_name = 'check_point{}.pth.tar'.format(epoch)
                 save_checkpoint({
                     'current_epoch': epoch,
                     'epoch': self.args.nepoch,
                     'state_dict': self.model.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
-                }, is_best=is_best, filename=checkpoint_name,file_dir=self.args.outf,best_file_dir=self.args.outf_best)
+                }, is_best=is_best, filename=checkpoint_name,file_dir=self.args.save_path)
                 self.min_loss = loss
 

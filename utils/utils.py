@@ -5,13 +5,32 @@ import torch
 import yaml
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints',best_file_dir="BestModels"):
-    save_path = os.path.join(file_dir,filename)
-    torch.save(state, save_path)
+def clean_dir(directory):
+        shutil.rmtree(os.path.join(directory))
+        os.makedirs(directory)
+
+
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints'):
+
+
+    save_checkpoint_dir = os.path.join(file_dir,'checkpoints')
+    save_best_dir = os.path.join(file_dir,'best')
+
+
+    if not os.path.exists(save_checkpoint_dir):
+        os.makedirs(save_checkpoint_dir)
+
+    if not os.path.exists(save_best_dir):
+        os.makedirs(save_best_dir)
+
+    torch.save(state, os.path.join(save_checkpoint_dir,filename))
+
+
     if is_best:
-        if not os.path.exists(best_file_dir):
-            os.makedirs(best_file_dir)
-            shutil.copyfile(save_path,os.path.join(best_file_dir,'best_'+filename))
+
+        shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
+        # conver other checkpoints
+        clean_dir(save_checkpoint_dir)
 
 
 def save_config_file(model_checkpoints_folder, args):

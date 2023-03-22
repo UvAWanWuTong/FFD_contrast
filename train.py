@@ -25,8 +25,7 @@ parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument(
     '--outf', type=str, default='checkpoints_train', help='output folder')
-parser.add_argument(
-    '--outf_best', type=str, default='best_train', help='output folder')
+
 parser.add_argument(
     '--model', type=str, default='', help='model path')
 parser.add_argument(
@@ -38,7 +37,6 @@ parser.add_argument(
 parser.add_argument(
     '--disable_cuda', default=False,action='store_true',
                     help='Disable CUDA')
-
 parser.add_argument(
     '--lr',type=float, default = 0.001, help='learning rate')
 parser.add_argument(
@@ -53,9 +51,16 @@ parser.add_argument(
 
 
 def main():
+
     opt = parser.parse_args()
     opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast(random:{ffd_points},{ffd_control})_train-{batchSize}".\
         format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+
+    if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
+        os.makedirs(os.path.join(opt.outf,opt.expriment_name))
+
+    opt.save_path = os.path.join(opt.outf,opt.expriment_name)
+
     print(opt.expriment_name)
     if not opt.disable_cuda and torch.cuda.is_available():
         opt.device = torch.device('cuda')
