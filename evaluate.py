@@ -202,7 +202,7 @@ for epoch in range(opt.nepoch):
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
             val_acc =  correct.item() / float(opt.batchSize)
-            wandb.log({"val acc": val_acc, "val loss": loss.item()})
+            wandb.log({"val_acc": val_acc, "val loss": loss.item()})
             if val_acc> max_val_acc:
                 max_val_acc = val_acc
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), val_loss.item(), correct.item()/float(opt.batchSize)))
