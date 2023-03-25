@@ -155,7 +155,7 @@ max_val_acc = 0
 
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 wandb.init(project="FDD_Contrast-evaluation",
-           name="pointnet",
+           name=opt.expriment_name,
            config={
                "architecture":"pointnet-classification",
                "epochs": opt.nepoch,
