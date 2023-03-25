@@ -71,8 +71,6 @@ print('Now use the device', opt.device)
 
 
 
-opt = parser.parse_args()
-print(opt)
 
 blue = lambda x: '\033[94m' + x + '\033[0m'
 
@@ -154,7 +152,7 @@ max_val_acc = 0
 
 
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-wandb.init(project="FDD_Contrast-evaluation",
+wandb.init(project="FFD_Contrast_evaluation",
            name=opt.expriment_name,
            config={
                "architecture":"pointnet-classification",
