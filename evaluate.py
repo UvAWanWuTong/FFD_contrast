@@ -191,7 +191,6 @@ for epoch in range(opt.nepoch):
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
         counter +=1
         if i % 10 == 0:
-            val_loss = 0
             j, data = next(enumerate(testdataloader, 0))
             points, target = data
             target = target[:, 0]
@@ -199,17 +198,17 @@ for epoch in range(opt.nepoch):
             points, target = points.cuda(), target.cuda()
             classifier = classifier.eval()
             pred, _, _ = classifier(points)
-            loss = F.nll_loss(pred, target)
+            val_loss = F.nll_loss(pred, target)
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
             val_acc =  correct.item() / float(opt.batchSize)
             wandb.log({"val acc": val_acc, "val loss": loss.item()})
             if val_acc> max_val_acc:
                 max_val_acc = val_acc
-            print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-        if epoch % 3 == 0:
+            print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), val_loss.item(), correct.item()/float(opt.batchSize)))
+    if epoch % 3 == 0:
             # save the best model checkpoints
-            if val_loss / float(opt.batchSize) < min_loss:
+            if val_loss.item() / float(opt.batchSize) < min_loss:
                 is_best = True
                 print('Save Best evaluation model.......')
 
