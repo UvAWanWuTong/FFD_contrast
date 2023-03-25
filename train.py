@@ -49,11 +49,10 @@ parser.add_argument(
     '--decay', type=float, default=0.8, help='lr decay  ')
 
 
-
 def main():
 
     opt = parser.parse_args()
-    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast(random:{ffd_points},{ffd_control})_train-{batchSize}".\
+    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_random:{ffd_points}_{ffd_control})_train-{batchSize}".\
         format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
