@@ -171,9 +171,6 @@ print('Iinitialization of wandb complete\n')
 for epoch in range(opt.nepoch):
     counter = 0
     for i, data in enumerate(dataloader, 0):
-        if opt.test:
-            if counter > 5:
-                break
         points, target = data
         target = target[:, 0].to()
         points = points.transpose(2, 1)
@@ -189,8 +186,8 @@ for epoch in range(opt.nepoch):
         scheduler.step()
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
-        # wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
-        #            "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
+        wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
+                   "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
         counter +=1
         if i % 10 == 0:
@@ -206,11 +203,9 @@ for epoch in range(opt.nepoch):
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
             val_acc =  correct.item() / float(opt.batchSize)
-            # wandb.log({"val acc": val_acc, "val loss": loss.item()})
+            wandb.log({"val acc": val_acc, "val loss": loss.item()})
             if val_acc> max_val_acc:
                 max_val_acc = val_acc
-
-
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
         if epoch % 3 == 0:
             # save the best model checkpoints
