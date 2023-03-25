@@ -26,7 +26,6 @@ parser.add_argument(
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument('--outf', type=str, default='checkpoints_eval', help='output  folder')
-parser.add_argument('--outf_best', type=str, default='best_eval', help='output best folder')
 parser.add_argument('--model', type=str, default='', help='model path')
 parser.add_argument('--dataset', type=str, required=True, help="dataset path")
 parser.add_argument('--dataset_type', type=str, default='modelnet40', help="dataset type shapenet|modelnet40")
@@ -41,23 +40,24 @@ parser.add_argument(
     '--step_size', type=int, default=200, help='step size of learning rate decay')
 
 parser.add_argument(
-    '--decay', type=int, default=0.8, help='lr decay  ')
+    '--decay', type=float, default=0.8, help='lr decay  ')
 
 parser.add_argument(
     '--expriment_name', type=str, default='FFD_contrast', help='the name of current expriment ')
 
 
+parser.add_argument(
+    '--test',  default=False, action='store_true', help='test the run  ')
 
 
 opt = parser.parse_args()
-opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast(random:{ffd_points},{ffd_control})_train-{batchSize}".\
-        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+opt.expriment_name = "{lr:}_{step_size}_{decay}_cls_evaluate-{batchSize}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,batchSize=opt.batchSize)
+
 if not os.path.exists(os.path.join(opt.outf, opt.expriment_name)):
     os.makedirs(os.path.join(opt.outf, opt.expriment_name))
 
-opt.save_path = os.path.join(opt.outf, opt.expriment_name)
-
-
+save_path = os.path.join(opt.outf, opt.expriment_name)
 
 if not opt.disable_cuda and torch.cuda.is_available():
     opt.device = torch.device('cuda')
@@ -148,6 +148,8 @@ num_batch = len(dataset) / opt.batchSize
 
 
 min_loss = 1000
+max_val_acc = 0
+
 
 
 
@@ -165,9 +167,13 @@ print('Iinitialization of wandb complete\n')
 
 
 
-for epoch in range(opt.nepoch):
 
+for epoch in range(opt.nepoch):
+    counter = 0
     for i, data in enumerate(dataloader, 0):
+        if opt.test:
+            if counter > 5:
+                break
         points, target = data
         target = target[:, 0].to()
         points = points.transpose(2, 1)
@@ -183,10 +189,10 @@ for epoch in range(opt.nepoch):
         scheduler.step()
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
-        wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
-                   "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
+        # wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
+        #            "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
-
+        counter +=1
         if i % 10 == 0:
             val_loss = 0
             j, data = next(enumerate(testdataloader, 0))
@@ -199,44 +205,30 @@ for epoch in range(opt.nepoch):
             loss = F.nll_loss(pred, target)
             pred_choice = pred.data.max(1)[1]
             correct = pred_choice.eq(target.data).cpu().sum()
-            wandb.log({"val acc": correct.item() / float(opt.batchSize), "val loss": loss.item()})
+            val_acc =  correct.item() / float(opt.batchSize)
+            # wandb.log({"val acc": val_acc, "val loss": loss.item()})
+            if val_acc> max_val_acc:
+                max_val_acc = val_acc
+
 
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-    if epoch % 3 == 0:
-        # save the best model checkpoints
-        if val_loss / float(opt.batchSize) < min_loss:
-            is_best = True
-            print('Save Best evaluation model.......')
+        if epoch % 3 == 0:
+            # save the best model checkpoints
+            if val_loss / float(opt.batchSize) < min_loss:
+                is_best = True
+                print('Save Best evaluation model.......')
 
-        else:
-            is_best = False
-            print('Save check points......')
+            else:
+                is_best = False
+                print('Save check points......')
 
-        checkpoint_name = 'checkpoint_{}.pth.tar'.format(epoch)
-        save_checkpoint({
-            'current_epoch': epoch,
-            'epoch': opt.nepoch,
-            'state_dict': classifier.state_dict(),
-            'optimizer': optimizer.state_dict(),
-        }, is_best=is_best, filename=checkpoint_name,file_dir=opt.save_path)
-        min_loss = loss
+            checkpoint_name = 'checkpoint_{}.pth.tar'.format(epoch)
+            save_checkpoint({
+                'current_epoch': epoch,
+                'epoch': opt.nepoch,
+                'state_dict': classifier.state_dict(),
+                'optimizer': optimizer.state_dict(),
+            }, is_best=is_best, filename=checkpoint_name,file_dir=save_path)
+            min_loss = loss
 
-    # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
 
-total_correct = 0
-total_testset = 0
-
-for i,data in tqdm(enumerate(testdataloader, 0)):
-    points, target = data
-    target = target[:, 0]
-    points = points.transpose(2, 1)
-    points, target = points.cuda(), target.cuda()
-    classifier = classifier.eval()
-    pred, _, _ = classifier(points)
-    pred_choice = pred.data.max(1)[1]
-    correct = pred_choice.eq(target.data).cpu().sum()
-    total_correct += correct.item()
-    total_testset += points.size()[0]
-
-print("final accuracy {}".format(total_correct / float(total_testset)))
-wandb.log({"final accuracy": total_correct / float(total_testset)})
