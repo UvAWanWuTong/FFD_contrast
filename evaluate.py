@@ -145,8 +145,9 @@ num_batch = len(dataset) / opt.batchSize
 
 
 
-min_loss = 1000
+max_top1 = 0
 max_val_acc = 0
+
 
 
 
@@ -164,11 +165,52 @@ wandb.init(project="FFD_Contrast_evaluation",
 print('Iinitialization of wandb complete\n')
 
 
+def evaluation(testdataloader=testdataloader,model=None):
+    classifier =model
+    j, data = next(enumerate(testdataloader, 0))
+    points, target = data
+    target = target[:, 0]
+    points = points.transpose(2, 1)
+    points, target = points.cuda(), target.cuda()
+    classifier = classifier.eval()
+    pred, _, _ = classifier(points)
+    val_loss = F.nll_loss(pred, target)
+    pred_choice = pred.data.max(1)[1]
+    correct = pred_choice.eq(target.data).cpu().sum()
+    val_acc = correct.item() / float(opt.batchSize)
+
+    return val_loss,val_acc
+
+
+def total_acc(testdataloader=testdataloader,model=None):
+    classifier=model
+    total_correct = 0
+    total_testset = 0
+    print('-------testing--------')
+    for i, data in tqdm(enumerate(testdataloader, 0)):
+        points, target = data
+        target = target[:, 0]
+        points = points.transpose(2, 1)
+        points, target = points.cuda(), target.cuda()
+        classifier = classifier.eval()
+        pred, _, _ = classifier(points)
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(target.data).cpu().sum()
+        total_correct += correct.item()
+        total_testset += points.size()[0]
+    top1_acc = total_correct / float(total_testset)
+    return top1_acc
+
 
 
 for epoch in range(opt.nepoch):
     counter = 0
+
     for i, data in enumerate(dataloader, 0):
+        # train
+        if opt.test:
+            if counter >5:
+                break
         points, target = data
         target = target[:, 0].to()
         points = points.transpose(2, 1)
@@ -189,38 +231,37 @@ for epoch in range(opt.nepoch):
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
         counter +=1
         if i % 10 == 0:
-            j, data = next(enumerate(testdataloader, 0))
-            points, target = data
-            target = target[:, 0]
-            points = points.transpose(2, 1)
-            points, target = points.cuda(), target.cuda()
-            classifier = classifier.eval()
-            pred, _, _ = classifier(points)
-            val_loss = F.nll_loss(pred, target)
-            pred_choice = pred.data.max(1)[1]
-            correct = pred_choice.eq(target.data).cpu().sum()
-            val_acc =  correct.item() / float(opt.batchSize)
+            #evaluate
+            val_loss,val_acc = evaluation(model=classifier)
             wandb.log({"val_acc": val_acc, "val loss": loss.item()})
             if val_acc> max_val_acc:
                 max_val_acc = val_acc
             print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), val_loss.item(), correct.item()/float(opt.batchSize)))
     if epoch % 3 == 0:
-            # save the best model checkpoints
-            if val_loss.item() / float(opt.batchSize) < min_loss:
-                is_best = True
-                print('Save Best evaluation model.......')
+        # calculate top-1 acc total
+        top1_acc = total_acc(model=classifier)
+        print("total accuracy {}",top1_acc)
+        wandb.log({"top1_acc":top1_acc})
 
-            else:
+        # save the best model checkpoints
+        if top1_acc > max_top1:
+                is_best = True
+                print('Save Best  model.......')
+
+        else:
                 is_best = False
                 print('Save check points......')
 
-            checkpoint_name = 'checkpoint_{}.pth.tar'.format(epoch)
-            save_checkpoint({
+        checkpoint_name = 'checkpoint_{}.pth.tar'.format(epoch)
+        save_checkpoint({
                 'current_epoch': epoch,
                 'epoch': opt.nepoch,
                 'state_dict': classifier.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }, is_best=is_best, filename=checkpoint_name,file_dir=save_path)
-            min_loss = loss
+        max_top1 = top1_acc
+        wandb.log({"max_top1_acc":max_top1})
+
+
 
 
