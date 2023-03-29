@@ -49,10 +49,14 @@ parser.add_argument(
 parser.add_argument(
     '--test',  default=False, action='store_true', help='test the run  ')
 
+parser.add_argument(
+    '--data_augmentation',  default=False, action='store_true', help='normal data  augmentation  ')
+
 
 opt = parser.parse_args()
-opt.expriment_name = "{lr:}_{step_size}_{decay}_cls_evaluate-{batchSize}".\
-        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,batchSize=opt.batchSize)
+opt.expriment_name = "{lr:}_{step_size}_{decay}_cls_evaluate-{batchSize}_aug_{aug}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,batchSize=opt.batchSize,aug=opt.data_augmentation)
+
 
 if not os.path.exists(os.path.join(opt.outf, opt.expriment_name)):
     os.makedirs(os.path.join(opt.outf, opt.expriment_name))
@@ -84,7 +88,9 @@ if opt.dataset_type == 'modelnet40':
     dataset = ModelNetDataset(
         root=opt.dataset,
         npoints=opt.num_points,
-        split='train')
+        split='train',
+        data_augmentation=opt.data_augmentation
+    )
 
     test_dataset = ModelNetDataset(
         root=opt.dataset,
