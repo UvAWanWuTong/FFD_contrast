@@ -253,6 +253,8 @@ for epoch in range(opt.nepoch):
         if top1_acc > max_top1:
                 is_best = True
                 print('Save Best  model.......')
+            max_top1 = top1_acc
+            wandb.log({"max_top1_acc": max_top1})
 
         else:
                 is_best = False
@@ -265,8 +267,7 @@ for epoch in range(opt.nepoch):
                 'state_dict': classifier.state_dict(),
                 'optimizer': optimizer.state_dict(),
             }, is_best=is_best, filename=checkpoint_name,file_dir=save_path)
-        max_top1 = top1_acc
-        wandb.log({"max_top1_acc":max_top1})
+
 
 
 
