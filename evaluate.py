@@ -253,8 +253,8 @@ for epoch in range(opt.nepoch):
         if top1_acc > max_top1:
                 is_best = True
                 print('Save Best  model.......')
-            max_top1 = top1_acc
-            wandb.log({"max_top1_acc": max_top1})
+                max_top1 = top1_acc
+                wandb.log({"max_top1_acc": max_top1})
 
         else:
                 is_best = False
