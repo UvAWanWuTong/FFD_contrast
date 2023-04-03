@@ -24,7 +24,6 @@ class NCESoftmaxLoss(nn.Module):
         labels = labels.to(self.device)  # labels [512,512]
 
         features = F.normalize(features, dim=1)  # for per sample
-
         # congusion matrix
         similarity_matrix = torch.matmul(features, features.T)  # similarity matrix[512,512]
 

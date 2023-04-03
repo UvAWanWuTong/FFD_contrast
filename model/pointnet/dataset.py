@@ -29,13 +29,14 @@ class Contrastive_ModelNetDataset(data.Dataset):
     def __init__(self,
                  root,
                  npoints=2500,
+
                  split='train',
                  data_augmentation=False,
                  FFD = True,
-                 ffd_points = 27,
+                 ffd_points_axis=3,
                  ffd_control= 6):
 
-        self.ffd_points = ffd_points
+        self.ffd_points_axis = ffd_points_axis
         self.ffd_control= ffd_control
         self.ffd = FFD
         self.npoints = npoints
@@ -67,17 +68,20 @@ class Contrastive_ModelNetDataset(data.Dataset):
         def random_move(ffd):
             # randomly move the control points of  the ffd
             ffd = ffd
-            point = np.random.randint(0, 3, size=[3])
-            ffd.array_mu_x[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
-            ffd.array_mu_y[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
-            ffd.array_mu_z[point[0], point[1], point[2]] = np.random.uniform(0.5, 1.5)
+
+            point = np.random.randint(0, len(ffd.array_mu_x), size=[len(ffd.array_mu_x)])
+            ffd.array_mu_x[point] = np.random.uniform(0.5, 1.5)
+            ffd.array_mu_y[point] = np.random.uniform(0.5, 1.5)
+            ffd.array_mu_z[point] = np.random.uniform(0.5, 1.5)
             return ffd
 
         # initialize the control space with box length of 2
         # check if the control space is the cube
-        points = math.pow(self.ffd_points, 1 / 3)
-        assert points.is_integer(), \
-            "The control space should be the cube"
+
+
+        points = self.ffd_points_axis
+        assert type(points)==int, \
+            "The number of points on each axis should be integer"
 
         ffd = FFD([int(points), int(points), int(points)])
         ffd.box_length = [2, 2, 2]

@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument(
-    '--num_points', type=int, default=3000, help='input batch size')
+    '--num_points', type=int, default=3000, help='input point size')
 parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
@@ -40,7 +40,7 @@ parser.add_argument(
 parser.add_argument(
     '--lr',type=float, default = 0.001, help='learning rate')
 parser.add_argument(
-    '--ffd_points', type=int, default=27, help='number of ffd points' )
+    '--ffd_points_axis', type=int, default=3, help='number of ffd points on each axis' )
 parser.add_argument(
     '--ffd_control', type=int, default=6, help='number of control points in ffd')
 parser.add_argument(
@@ -50,9 +50,9 @@ parser.add_argument(
 
 
 def main():
-
     opt = parser.parse_args()
-    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_random:{ffd_points}_{ffd_control})_train-{batchSize}".\
+    opt.ffd_points = pow(opt.ffd_points_axis,3)
+    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_random_{ffd_points}_{ffd_control}_train-{batchSize}".\
         format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
@@ -83,7 +83,7 @@ def main():
             root=opt.dataset,
             npoints=opt.num_points,
             split='train',
-            ffd_points = opt.ffd_points,
+            ffd_points_axis = opt.ffd_points_axis,
             ffd_control = opt.ffd_control,
 
         )
