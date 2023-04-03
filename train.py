@@ -75,7 +75,7 @@ def main():
 
     opt.manualSeed = random.randint(1, 10000)  # fix seed
     random.seed(opt.manualSeed)
-    torch.manual_seed(opt.manualSeed)
+    # torch.manual_seed(opt.manualSeed)
 
     if opt.dataset_type == 'modelnet40':
         dataset = Contrastive_ModelNetDataset(
