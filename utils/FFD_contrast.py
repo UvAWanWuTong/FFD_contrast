@@ -42,9 +42,6 @@ class FFD_contrast(object):
                 loss.backward()
                 self.optimizer.step()
                 self.scheduler.step()
-
-
-
                 self.writer.log({
                                "train loss": loss.item(),
                                "Train epoch": epoch,
