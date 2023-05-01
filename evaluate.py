@@ -165,7 +165,7 @@ wandb.init(project="FFD_Contrast_evaluation",
                "epochs": opt.nepoch,
                "LearningRate":opt.lr,
                "step_size":opt.step_size,
-               "model":opt.mode.split('/')[-3],
+               "model":opt.model.split('/')[-3],
                "dataset":'ModelNet40'
            }
            )
