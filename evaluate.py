@@ -157,13 +157,15 @@ max_val_acc = 0
 
 
 
-
 wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
 wandb.init(project="FFD_Contrast_evaluation",
            name=opt.expriment_name,
            config={
                "architecture":"pointnet-classification",
                "epochs": opt.nepoch,
+               "LearningRate":opt.lr,
+               "step_size":opt.step_size,
+               "model":opt.mode.split('/')[-3],
                "dataset":'ModelNet40'
            }
            )
