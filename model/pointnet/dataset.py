@@ -69,14 +69,13 @@ class Contrastive_ModelNetDataset(data.Dataset):
             # randomly move the control points of  the ffd
             ffd = ffd
 
-            point = np.random.randint(0, len(ffd.array_mu_x), size=[len(ffd.array_mu_x)])
+            point = np.random.randint(0, len(ffd.array_mu_x), size=[3])
             ffd.array_mu_x[point] = np.random.uniform(0.5, 1.5)
             ffd.array_mu_y[point] = np.random.uniform(0.5, 1.5)
             ffd.array_mu_z[point] = np.random.uniform(0.5, 1.5)
             return ffd
 
         # initialize the control space with box length of 2
-        # check if the control space is the cube
 
 
         points = self.ffd_points_axis
