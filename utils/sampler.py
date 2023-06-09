@@ -50,7 +50,7 @@ class RandomSampler(object):
     def __init__(self,output_size):
         self.output_size = output_size
 
-    def __call__(self, point_set):
+    def __call__(self, point_set,verts=None):
         choice = np.random.choice(len(point_set),   self.output_size, replace=True)
         point_set = point_set[choice, :]
 

@@ -4,10 +4,11 @@ import os
 import random
 import torch.optim as optim
 import torch.utils.data
-from model.pointnet.dataset import Contrastive_ModelNetDataset
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer
+from model.pointnet.dataset import Contrastive_ModelNetDataset,Contrastive_ModelNetDataset_learnable
+from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 from utils.FFD_contrast import FFD_contrast
+from utils.FFD_learnable_contrast import FFD_learnable_contrast
 import torch.backends.cudnn as cudnn
 import tqdm
 import torch.nn.functional as F
@@ -50,6 +51,10 @@ parser.add_argument(
 parser.add_argument(
     '--sampler', type=str, default='random',help='choose of sampler'
 )
+parser.add_argument(
+    '--task_type', type=str, default='learnable',help='type of ffd deformation'
+)
+
 
 def main():
     opt = parser.parse_args()
@@ -80,7 +85,17 @@ def main():
     # torch.manual_seed(opt.manualSeed)
 
     if opt.dataset_type == 'modelnet40':
-        dataset = Contrastive_ModelNetDataset(
+        # dataset = Contrastive_ModelNetDataset(
+        #
+        #     root=opt.dataset,
+        #     npoints=opt.num_points,
+        #     split='train',
+        #     ffd_points_axis = opt.ffd_points_axis,
+        #     ffd_control = opt.ffd_control,
+        #
+        # )
+
+        dataset = Contrastive_ModelNetDataset_learnable(
 
             root=opt.dataset,
             npoints=opt.num_points,
@@ -89,6 +104,7 @@ def main():
             ffd_control = opt.ffd_control,
 
         )
+
     else:
         exit('wrong dataset type')
 
@@ -107,10 +123,28 @@ def main():
         pass
 
 
-
+    model_list = None
     model = Contrastive_PointNet(feature_transform=opt.feature_transform)
 
-    optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
+    if opt.task_type == 'learnable':
+
+        deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+
+        optimizer = optim.Adam([
+            {'params': model.parameters()},
+            {'params': deform_net1.parameters(), 'lr': 1e-3},
+            {'params': deform_net2.parameters(), 'lr': 1e-3},
+        ],lr=opt.lr, betas=(0.9, 0.999))
+
+        model_list = [model,deform_net1,deform_net2]
+
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=opt.lr, betas=(0.9, 0.999))
+
+
+
+
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
 
@@ -123,7 +157,7 @@ def main():
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
     wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast",
+    wandb.init(project="FFD_Contrast_learnable",
                        name=opt.expriment_name,
                        config={
                            "architecture":"pointnet-classification",
@@ -144,7 +178,10 @@ def main():
 
 
     print('current batch size',opt.batchSize)
-    ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
+    # ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
+    ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list
+                                           )
+
     ffd_contrast.train(train_dataloader)
 
 

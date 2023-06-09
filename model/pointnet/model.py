@@ -8,6 +8,26 @@ import numpy as np
 import torch.nn.functional as F
 
 
+
+
+
+
+
+class Deform_Net(nn.Module):
+    def __init__(self, in_features, out_features):
+
+        super(Deform_Net, self).__init__()
+        self.fc = nn.Linear(in_features, out_features)
+
+
+    def forward(self,x):
+        dp = self.fc(x)
+        dp = torch.reshape(dp,(x.shape[0],-1,3))
+        return dp
+
+
+
+
 class STN3d(nn.Module):
     def __init__(self):
         super(STN3d, self).__init__()

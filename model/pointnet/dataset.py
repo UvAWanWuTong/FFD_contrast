@@ -4,15 +4,12 @@ import os
 os.chdir(os.path.dirname(__file__))
 import os.path
 import torch
-import numpy as np
 import sys
-import math
-from tqdm import tqdm 
-import json
-import pygem
 from pygem import FFD
-from plyfile import PlyData, PlyElement
-from utils.sampler import PointSampler,Normalize,RandomSampler
+from utils.ffd_utils import *
+from plyfile import PlyData
+from utils.sampler import Normalize,RandomSampler
+from utils.utils import np_to_tensor
 
 def gen_modelnet_id(root):
     classes = []
@@ -139,6 +136,86 @@ class Contrastive_ModelNetDataset(data.Dataset):
 
     def __len__(self):
         return len(self.fns)
+
+
+class Contrastive_ModelNetDataset_learnable(data.Dataset):
+    def __init__(self,
+                 root,
+                 npoints=2500,
+
+                 split='train',
+                 data_augmentation=False,
+                 FFD = True,
+                 ffd_points_axis=3,
+                 ffd_control= 6):
+
+        self.ffd_points_axis = ffd_points_axis
+        self.ffd_control= ffd_control
+        self.ffd = FFD
+        self.npoints = npoints
+        self.root = root
+        self.split = split
+        self.data_augmentation = data_augmentation
+        self.fns = []
+
+
+
+
+        with open(os.path.join(root, '{}.txt'.format(self.split)), 'r') as f:
+            for line in f:
+                self.fns.append(line.strip())
+
+        self.cat = {}
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../ModelNet40/modelnet_id.txt'), 'r') as f:
+            for line in f:
+                ls = line.strip().split()
+                self.cat[ls[0]] = int(ls[1])
+
+        print(self.cat)
+        self.classes = list(self.cat.keys())
+
+
+
+
+
+    def __getitem__(self, index):
+        fn = self.fns[index]
+        cls = self.cat[fn.split('/')[0]]
+        with open(os.path.join(self.root, fn), 'rb') as f:
+            plydata = PlyData.read(f)
+        verts = np.vstack([plydata['vertex']['x'], plydata['vertex']['y'], plydata['vertex']['z']]).T
+        face = plydata['face']['vertex_index'].T
+
+        # point_set = PointSampler(self.npoints)((verts, face))
+        point_set = RandomSampler(self.npoints)(verts)
+        point_set = Normalize()(point_set)
+
+        point_set1 = point_set.copy()
+        point_set2 = point_set.copy()
+
+
+        b1,p1 = calculate_ffd(points =point_set1,n=self.ffd_points_axis)
+
+        b2,p2 = calculate_ffd(points=point_set2, n=self.ffd_points_axis)
+
+
+
+
+        b1 = np_to_tensor(b1)
+        p1 = np_to_tensor(p1)
+        b2 = np_to_tensor(b2)
+        p2 = np_to_tensor(p2)
+
+        # point_set1 = torch.from_numpy(point_set1.astype(np.float32))
+        # point_set2 = torch.from_numpy(point_set2.astype(np.float32))
+
+
+        return (b1,p1) , (b2,p2)
+
+
+    def __len__(self):
+        return len(self.fns)
+
 
 
 class ModelNetDataset(data.Dataset):

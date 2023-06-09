@@ -3,7 +3,7 @@ import shutil
 
 import torch
 import yaml
-
+import numpy as np
 
 def clean_dir(directory):
         shutil.rmtree(os.path.join(directory))
@@ -55,3 +55,7 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+def np_to_tensor(x):
+
+    return torch.from_numpy(x.astype(np.float32))

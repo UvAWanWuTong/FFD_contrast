@@ -4,12 +4,12 @@ from utils.utils import save_config_file,save_checkpoint
 from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 import logging
-# from model.pointnet.model import Deform_Net
 from tqdm.auto import tqdm
+import torch
 
 
 
-class FFD_contrast(object):
+class FFD_learnable_contrast(object):
     def __init__(self,*args,**kwargs):
         self.args = kwargs['args']
         self.model = kwargs['model'].to(self.args.device)
@@ -18,7 +18,14 @@ class FFD_contrast(object):
         self.writer = kwargs['writer']
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
+        self.model_list =  kwargs['model_list']
 
+        # self.deform_model =
+
+
+    def learnable_deform(self,feature):
+        deform_net = None
+        feature = deform_net(feature)
 
 
 
@@ -29,19 +36,72 @@ class FFD_contrast(object):
             epoch_loss = 0
             for data in  train_loader:
 
-                points1, points2 = data
+                (b1,p1), (b2,p2) = data
+                b1 = b1.to(self.args.device)
+                p1 = p1.to(self.args.device)
+                b2 = b2.to(self.args.device)
+                p2 = p2.to(self.args.device)
+
+
+
+
+
+
+                # points1 = points1.transpose(2, 1).to(self.args.device)
+                # points2 = points2.transpose(2, 1).to(self.args.device)
+
+                # F0, trans, trans_feat = classifier(points1)
+                # F1, trans, trans_feat = classifier(points2)
+
+
+
+
+
+                # perfom FFD deformation
+
+                points1 = torch.bmm(b1, p1)
+                points2 = torch.bmm(b2, p2)
+
+                #points normlaize
+
                 points1 = points1.transpose(2, 1).to(self.args.device)
                 points2 = points2.transpose(2, 1).to(self.args.device)
 
                 self.optimizer.zero_grad()
-                classifier = self.model.train()
-                F0, trans, trans_feat = classifier(points1)
-                F1, trans, trans_feat = classifier(points2)
-                # if learnable FFD
+                classifier = self.model_list[0].train()
+                deform_net_1 = self.model_list[1].train()
+                deform_net_2 = self.model_list[2].train()
+
+
+
+                # 先变形 在产生 Feature
+
+
+                F1, trans, trans_feat = classifier(points1)
+                F2, trans, trans_feat = classifier(points2)
+
+                # get FFD deformation strategy
+
+                # FFD learnable
+                dp_1 = deform_net_1(F1).to(self.args.device)
+                dp_2 = deform_net_2(F2).to(self.args.device)
+
+                # perfom ffd
+                points1_ffd = torch.bmm(b1,p1+dp_1)
+                points2_ffd = torch.bmm(b1,p2+dp_2)
+
+                points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
+                points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
+
+                # get the feature after FFD
+                F1, trans, trans_feat = classifier(points1_ffd)
+                F2, trans, trans_feat = classifier(points2_ffd)
+
+
 
 
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
-                loss = criterion(F0, F1)
+                loss = criterion(F1, F2)
 
                 if self.args.feature_transform:
                     loss += feature_transform_regularizer(trans_feat) * 0.001
