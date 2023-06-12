@@ -55,12 +55,20 @@ parser.add_argument(
     '--task_type', type=str, default='learnable',help='type of ffd deformation'
 )
 
+parser.add_argument(
+    '--regularization', default=False, help='use of regulariztion term during the learnable FFD')
+
+
+
 
 def main():
+
+    #
+
     opt = parser.parse_args()
     opt.ffd_points = pow(opt.ffd_points_axis,3)
-    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_random_new_{ffd_points}_{ffd_control}_train-{batchSize}".\
-        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_{ffd_control}_train-{batchSize}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
         os.makedirs(os.path.join(opt.outf,opt.expriment_name))
@@ -85,25 +93,27 @@ def main():
     # torch.manual_seed(opt.manualSeed)
 
     if opt.dataset_type == 'modelnet40':
-        # dataset = Contrastive_ModelNetDataset(
-        #
-        #     root=opt.dataset,
-        #     npoints=opt.num_points,
-        #     split='train',
-        #     ffd_points_axis = opt.ffd_points_axis,
-        #     ffd_control = opt.ffd_control,
-        #
-        # )
 
-        dataset = Contrastive_ModelNetDataset_learnable(
+        if opt.task_type != 'learnable':
+            # random FFD and customized FFD
+            #
+            dataset = Contrastive_ModelNetDataset(
+                    root=opt.dataset,
+                    npoints=opt.num_points,
+                    split='train',
+                    ffd_points_axis = opt.ffd_points_axis,
+                    ffd_control = opt.ffd_control,
+                )
+        else:
+            dataset = Contrastive_ModelNetDataset_learnable(
 
-            root=opt.dataset,
-            npoints=opt.num_points,
-            split='train',
-            ffd_points_axis = opt.ffd_points_axis,
-            ffd_control = opt.ffd_control,
+                root=opt.dataset,
+                npoints=opt.num_points,
+                split='train',
+                ffd_points_axis = opt.ffd_points_axis,
+                ffd_control = opt.ffd_control,
 
-        )
+            )
 
     else:
         exit('wrong dataset type')
@@ -156,21 +166,22 @@ def main():
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast_learnable",
-                       name=opt.expriment_name,
-                       config={
-                           "architecture":"pointnet-classification",
-                           "batch_size":opt.batchSize,
-                           "epochs": opt.nepoch,
-                           "dataset":'ModelNet40',
-                           "ffd_points" : opt.ffd_points,
-                           "ffd_control" : opt.ffd_control,
-                           "lr" : opt.lr,
-                           "step_size" : opt.step_size,
-                           "decay" : opt.decay
-    }
-                       )
+    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    # wandb.init(project="FFD_Contrast_learnable",
+    #                    name=opt.expriment_name,
+    #                    config={
+    #                        "architecture":"pointnet-classification",
+    #                        "batch_size":opt.batchSize,
+    #                        "epochs": opt.nepoch,
+    #                        "dataset":'ModelNet40',
+    #                        "ffd_points" : opt.ffd_points,
+    #                        "ffd_control" : opt.ffd_control,
+    #                        "lr" : opt.lr,
+    #                        "step_size" : opt.step_size,
+    #                        "decay" : opt.decay
+    # }
+    #                    )
+
 
 
     print('Iinitialization of logger complete\n')

@@ -86,9 +86,18 @@ class FFD_learnable_contrast(object):
                 dp_1 = deform_net_1(F1).to(self.args.device)
                 dp_2 = deform_net_2(F2).to(self.args.device)
 
+
+                #将liner 改成 CNN？
+                #加上 regularization term
+                #
+
+
                 # perfom ffd
                 points1_ffd = torch.bmm(b1,p1+dp_1)
                 points2_ffd = torch.bmm(b1,p2+dp_2)
+
+
+
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
