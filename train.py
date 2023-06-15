@@ -67,8 +67,8 @@ def main():
 
     opt = parser.parse_args()
     opt.ffd_points = pow(opt.ffd_points_axis,3)
-    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_{ffd_control}_train-{batchSize}".\
-        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, ffd_control=opt.ffd_control, batchSize=opt.batchSize)
+    opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}".\
+        format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize)
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
         os.makedirs(os.path.join(opt.outf,opt.expriment_name))
