@@ -19,6 +19,7 @@ class FFD_learnable_contrast(object):
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
+        self.distance_metric =  kwargs['distance']
 
         # self.deform_model =
 
@@ -90,15 +91,16 @@ class FFD_learnable_contrast(object):
 
                 #将liner 改成 CNN？
                 #加上 regularization term
-                #
+
 
 
                 # perfom ffd
                 points1_ffd = torch.bmm(b1,p1+dp_1)
                 points2_ffd = torch.bmm(b1,p2+dp_2)
 
-                # chamferDist = ChamferDistance()
 
+                dist = self.distance_metric(points1_ffd,points2_ffd).detach().cpu().numpy()
+                print(dist)
 
 
 
@@ -126,7 +128,9 @@ class FFD_learnable_contrast(object):
                 self.writer.log({
                                "train loss": loss.item(),
                                "Train epoch": epoch,
-                               "Learning rate":self.scheduler.get_last_lr()[0]})
+                               "Learning rate":self.scheduler.get_last_lr()[0],
+                               "chamfer loss":dist},
+                              )
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 counter +=1
