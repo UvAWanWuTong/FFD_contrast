@@ -14,7 +14,6 @@ import tqdm
 import torch.nn.functional as F
 from tqdm import tqdm
 import wandb
-from chamferdist import ChamferDistance
 
 
 parser = argparse.ArgumentParser()
