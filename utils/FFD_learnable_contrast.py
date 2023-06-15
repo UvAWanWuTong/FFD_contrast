@@ -6,7 +6,7 @@ from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
 import torch
-
+from chamferdist import ChamferDistance
 
 
 class FFD_learnable_contrast(object):
@@ -80,6 +80,7 @@ class FFD_learnable_contrast(object):
                 F1, trans, trans_feat = classifier(points1)
                 F2, trans, trans_feat = classifier(points2)
 
+
                 # get FFD deformation strategy
 
                 # FFD learnable
@@ -95,6 +96,10 @@ class FFD_learnable_contrast(object):
                 # perfom ffd
                 points1_ffd = torch.bmm(b1,p1+dp_1)
                 points2_ffd = torch.bmm(b1,p2+dp_2)
+
+                # chamferDist = ChamferDistance()
+
+
 
 
 

@@ -166,21 +166,21 @@ def main():
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    # wandb.init(project="FFD_Contrast_learnable",
-    #                    name=opt.expriment_name,
-    #                    config={
-    #                        "architecture":"pointnet-classification",
-    #                        "batch_size":opt.batchSize,
-    #                        "epochs": opt.nepoch,
-    #                        "dataset":'ModelNet40',
-    #                        "ffd_points" : opt.ffd_points,
-    #                        "ffd_control" : opt.ffd_control,
-    #                        "lr" : opt.lr,
-    #                        "step_size" : opt.step_size,
-    #                        "decay" : opt.decay
-    # }
-    #                    )
+    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    wandb.init(project="FFD_Contrast_learnable",
+                       name=opt.expriment_name,
+                       config={
+                           "architecture":"pointnet-classification",
+                           "batch_size":opt.batchSize,
+                           "epochs": opt.nepoch,
+                           "dataset":'ModelNet40',
+                           "ffd_points" : opt.ffd_points,
+                           "ffd_control" : opt.ffd_control,
+                           "lr" : opt.lr,
+                           "step_size" : opt.step_size,
+                           "decay" : opt.decay
+    }
+                       )
 
 
 
