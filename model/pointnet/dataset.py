@@ -5,7 +5,7 @@ os.chdir(os.path.dirname(__file__))
 import os.path
 import torch
 import sys
-# from pygem import FFD
+from pygem import FFD
 from utils.ffd_utils import *
 from plyfile import PlyData
 from utils.sampler import Normalize,RandomSampler

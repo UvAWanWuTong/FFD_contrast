@@ -6,7 +6,6 @@ from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
 import torch
-from chamferdist import ChamferDistance
 
 
 class FFD_learnable_contrast(object):
@@ -99,8 +98,8 @@ class FFD_learnable_contrast(object):
                 points2_ffd = torch.bmm(b1,p2+dp_2)
 
 
-                dist = self.distance_metric(points1_ffd,points2_ffd).detach().cpu().numpy()
-                print(dist)
+                # dist = self.distance_metric(points1_ffd,points2_ffd).detach().cpu().numpy()
+                # print(dist)
 
 
 

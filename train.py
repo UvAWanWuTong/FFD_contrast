@@ -192,11 +192,12 @@ def main():
 
     print('current batch size',opt.batchSize)
 
-    chamferDist = ChamferDistance()
+    # chamferDist = ChamferDistance()
 
 
     # ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
-    ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list,distance=chamferDist
+    ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list,distance=None
+
                                            )
 
     ffd_contrast.train(train_dataloader)
