@@ -128,7 +128,7 @@ class FFD_learnable_contrast(object):
                                "train loss": loss.item(),
                                "Train epoch": epoch,
                                "Learning rate":self.scheduler.get_last_lr()[0],
-                               "chamfer loss":dist},
+                               },
                               )
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
