@@ -20,12 +20,11 @@ class FFD_learnable_contrast(object):
         self.model_list =  kwargs['model_list']
         self.distance_metric =  kwargs['distance']
 
+
         # self.deform_model =
 
 
-    def learnable_deform(self,feature):
-        deform_net = None
-        feature = deform_net(feature)
+
 
 
 
@@ -35,24 +34,11 @@ class FFD_learnable_contrast(object):
             counter = 0
             epoch_loss = 0
             for data in  train_loader:
-
                 (b1,p1), (b2,p2) = data
                 b1 = b1.to(self.args.device)
                 p1 = p1.to(self.args.device)
                 b2 = b2.to(self.args.device)
                 p2 = p2.to(self.args.device)
-
-
-
-
-
-
-                # points1 = points1.transpose(2, 1).to(self.args.device)
-                # points2 = points2.transpose(2, 1).to(self.args.device)
-
-                # F0, trans, trans_feat = classifier(points1)
-                # F1, trans, trans_feat = classifier(points2)
-
 
 
 
@@ -88,11 +74,6 @@ class FFD_learnable_contrast(object):
                 dp_2 = deform_net_2(F2).to(self.args.device)
 
 
-                #将liner 改成 CNN？
-                #加上 regularization term
-
-
-
                 # perfom ffd
                 points1_ffd = torch.bmm(b1,p1+dp_1)
                 points2_ffd = torch.bmm(b1,p2+dp_2)
@@ -102,15 +83,12 @@ class FFD_learnable_contrast(object):
                 # print(dist)
 
 
-
-
-
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
 
                 # get the feature after FFD
-                F1, trans, trans_feat = classifier(points1_ffd)
-                F2, trans, trans_feat = classifier(points2_ffd)
+                F1, trans, trans_feat, = classifier(points1_ffd)
+                F2, trans, trans_feat, = classifier(points2_ffd)
 
 
 
@@ -124,6 +102,7 @@ class FFD_learnable_contrast(object):
                 loss.backward()
                 self.optimizer.step()
                 self.scheduler.step()
+
                 self.writer.log({
                                "train loss": loss.item(),
                                "Train epoch": epoch,
@@ -131,9 +110,12 @@ class FFD_learnable_contrast(object):
                                },
                               )
 
+
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
-                counter +=1
-            if epoch % 1 ==0:
+                # counter +=1
+                # if counter > 5:
+                #     break
+            if epoch % 5 ==0:
                 # save the best model checkpoints
                 if epoch_loss / self.num_batch < self.min_loss:
                         is_best = True
@@ -150,4 +132,28 @@ class FFD_learnable_contrast(object):
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=checkpoint_name,file_dir=self.args.save_path)
                 self.min_loss = loss
+
+
+                #save deform net
+                deform_net_name = 'deform_net_1'
+                save_checkpoint({
+                    'state_dict': deform_net_1.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
+                self.min_loss = loss
+
+
+                deform_net_name = 'deform_net_2'
+                save_checkpoint({
+                    'state_dict': deform_net_1.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
+                self.min_loss = loss
+
+
+
+
+
+
+
 

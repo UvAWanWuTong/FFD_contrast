@@ -33,6 +33,8 @@ class FFD_contrast(object):
                 points1 = points1.transpose(2, 1).to(self.args.device)
                 points2 = points2.transpose(2, 1).to(self.args.device)
 
+
+
                 self.optimizer.zero_grad()
                 classifier = self.model.train()
                 F0, trans, trans_feat = classifier(points1)

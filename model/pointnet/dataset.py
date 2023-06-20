@@ -200,7 +200,6 @@ class Contrastive_ModelNetDataset_learnable(data.Dataset):
 
 
 
-
         b1 = np_to_tensor(b1)
         p1 = np_to_tensor(p1)
         b2 = np_to_tensor(b2)

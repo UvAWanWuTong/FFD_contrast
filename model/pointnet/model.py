@@ -149,25 +149,29 @@ class PointNetfeat(nn.Module):
 class Contrastive_PointNet(nn.Module):
     def __init__(self, feature_transform=False):
         super(Contrastive_PointNet, self).__init__()
+
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
         # # self.fc1 = nn.Linear(1024, 1024)
         # # self.relu = nn.ReLU()
         # self.fc2 = nn.Linear(1024, 128)
-
         self.fc1 = nn.Linear(1024, 128)
+
 
 
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
         x = self.fc1(x)
-        return F.log_softmax(x, dim=1), trans, trans_feat
+        feature =  F.log_softmax(x, dim=1)
+        return feature, trans, trans_feat
+
 
 
 class PointNetCls(nn.Module):
     def __init__(self, k=2, feature_transform=False):
         super(PointNetCls, self).__init__()
         # remove the linear projection layer
+        # self.deform_net = Deform_Net()
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
         self.fc2 = nn.Linear(1024, 512)
@@ -183,7 +187,8 @@ class PointNetCls(nn.Module):
         x = F.relu(self.bn1(self.fc2(x)))
         x = F.relu(self.bn2(self.dropout(self.fc3(x))))
         x = self.fc4(x)
-        return F.log_softmax(x, dim=1), trans, trans_feat
+        feature = F.log_softmax(x, dim=1)
+
 
 
 
@@ -226,6 +231,7 @@ if __name__ == '__main__':
 
     contrastive_pointnet = Contrastive_PointNet()
 
+    sim_data = Variable(torch.rand(32,3,2500))
     cls = PointNetCls(k=5)
     out, _, _ = cls(sim_data)
     print('class', out.size())
