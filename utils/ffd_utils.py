@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.special import comb
+import warnings
+warnings.filterwarnings("error")
+
 
 
 def bernstein_poly(n, v, stu):
@@ -33,6 +36,8 @@ def mesh3d(x, y, z, dtype=np.float32):
 
 
 def extent(x, *args, **kwargs):
+    """ retutn the upper boundary and low boundary """
+
     return np.min(x, *args, **kwargs), np.max(x, *args, **kwargs)
 
 
@@ -46,6 +51,7 @@ def xyz_to_stu(xyz, origin, stu_axes):
     # s, t, u = np.diag(stu_axes)
     assert(stu_axes.shape == (3, 3))
     s, t, u = stu_axes
+
     tu = np.cross(t, u)
     su = np.cross(s, u)
     st = np.cross(s, t)
@@ -56,8 +62,8 @@ def xyz_to_stu(xyz, origin, stu_axes):
 
 
     tu_divide = handling_inf(np.dot(diff, tu),np.dot(s, tu))
-    su_divide = handling_inf(np.dot(diff, su),np.dot(s, su))
-    st_divide = handling_inf(np.dot(diff, st),np.dot(s, st))
+    su_divide = handling_inf(np.dot(diff, su),np.dot(t, su))
+    st_divide = handling_inf(np.dot(diff, st),np.dot(u, st))
 
     stu = np.stack([
         tu_divide,
@@ -67,6 +73,39 @@ def xyz_to_stu(xyz, origin, stu_axes):
     ], axis=-1)
     return stu
 
+
+
+#
+# def xyz_to_stu(xyz, origin, stu_axes):
+#     if stu_axes.shape == (3,):
+#         stu_axes = np.diag(stu_axes)
+#         # raise ValueError(
+#         #     'stu_axes should have shape (3,), got %s' % str(stu_axes.shape))
+#     # s, t, u = np.diag(stu_axes)
+#     assert(stu_axes.shape == (3, 3))
+#     s, t, u = stu_axes
+#
+#     tu = np.cross(t, u)
+#     su = np.cross(s, u)
+#     st = np.cross(s, t)
+#
+#     diff = xyz - origin
+#
+#     # TODO: vectorize? np.dot(diff, [tu, su, st]) / ...
+#
+#     try:
+#         stu = np.stack([
+#             np.dot(diff, tu) / np.dot(s, tu),
+#             np.dot(diff, su) / np.dot(t, su),
+#             np.dot(diff, st) / np.dot(u, st)
+#         ], axis=-1)
+#     except RuntimeWarning:
+#         print('okk')
+#
+#
+#     return stu
+#
+#
 
 
 def handling_inf(A,B):
@@ -105,11 +144,13 @@ def get_stu_deformation_matrix(stu, dims):
         dtype=np.int32)
     v = np.reshape(v, (-1, 3))
 
+    #
     weights = bernstein_poly(
         n=np.array(dims, dtype=np.int32),
         v=v,
         stu=np.expand_dims(stu, axis=-2))
 
+    #
     b = np.prod(weights, axis=-1)
     return b
 
@@ -141,6 +182,7 @@ def get_stu_params(xyz):
     return stu_origin, stu_axes
 
 
+
 def calculate_ffd(points,n=3):
     # import template_FFD.deform as ffd
     # import util3d.mesh.sample as sample
@@ -148,4 +190,5 @@ def calculate_ffd(points,n=3):
     dims = (n,) * 3
     # return ffd.get_ffd(points, dims)
     return get_ffd(points, dims)
+
 

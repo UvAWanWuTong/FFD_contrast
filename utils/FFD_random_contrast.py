@@ -6,8 +6,6 @@ from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
 import torch
-import chamferdist
-from chamferdist import ChamferDistance
 
 
 class FFD_learnable_contrast(object):
@@ -20,7 +18,8 @@ class FFD_learnable_contrast(object):
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
-        self.chamferDist = ChamferDistance()
+        self.distance_metric =  kwargs['distance']
+
 
         # self.deform_model =
 
@@ -71,7 +70,8 @@ class FFD_learnable_contrast(object):
                 # get FFD deformation strategy
 
                 # FFD learnable
-                dp_1 = deform_net_1(F1).to(self.args.device)
+                dp_1 = deform_net_2(F1).to(self.args.device)
+
                 dp_2 = deform_net_2(F2).to(self.args.device)
 
 
@@ -80,8 +80,9 @@ class FFD_learnable_contrast(object):
                 points2_ffd = torch.bmm(b1,p2+dp_2)
 
 
-                dist = self.chamferDist(points1_ffd,points2_ffd).detach().cpu().numpy()
+                dist = self.distance_metric(points1_ffd,points2_ffd).detach().cpu().numpy()
 
+                print()
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
@@ -103,13 +104,12 @@ class FFD_learnable_contrast(object):
                 self.optimizer.step()
                 self.scheduler.step()
 
-                self.writer.log({
-                               "train loss": loss.item(),
-                               "Train epoch": epoch,
-                               "Learning rate":self.scheduler.get_last_lr()[0],
-                               "chamferDist":dist,
-                               },
-                              )
+                # self.writer.log({
+                #                "train loss": loss.item(),
+                #                "Train epoch": epoch,
+                #                "Learning rate":self.scheduler.get_last_lr()[0],
+                #                },
+                #               )
 
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
@@ -136,7 +136,7 @@ class FFD_learnable_contrast(object):
 
 
                 #save deform net
-                deform_net_name = 'deform_net_1.pth.tar'
+                deform_net_name = 'deform_net_1'
                 save_checkpoint({
                     'state_dict': deform_net_1.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
@@ -144,16 +144,12 @@ class FFD_learnable_contrast(object):
                 self.min_loss = loss
 
 
-                deform_net_name = 'deform_net_2.pth.tar'
+                deform_net_name = 'deform_net_2'
                 save_checkpoint({
                     'state_dict': deform_net_1.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
                 self.min_loss = loss
-
-
-
-
 
 
 
