@@ -11,6 +11,8 @@ from plyfile import PlyData
 from utils.sampler import Normalize,RandomSampler
 from utils.utils import np_to_tensor
 
+
+
 def gen_modelnet_id(root):
     classes = []
     with open(os.path.join(root, 'train.txt'), 'r') as f:

@@ -5,9 +5,19 @@ from model.pointnet.model import Contrastive_PointNet, feature_transform_regular
 from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
+
+need_pytorch3d=False
+import sys
 import torch
-import chamferdist
-from chamferdist import ChamferDistance
+
+from pytorch3d.ops import sample_points_from_meshes
+from pytorch3d.loss import (
+    chamfer_distance,
+    mesh_edge_loss,
+    mesh_laplacian_smoothing,
+    mesh_normal_consistency,
+)
+
 
 
 class FFD_learnable_contrast(object):
@@ -20,9 +30,7 @@ class FFD_learnable_contrast(object):
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
-        self.chamferDist = ChamferDistance()
 
-        # self.deform_model =
 
 
 
@@ -79,9 +87,11 @@ class FFD_learnable_contrast(object):
                 points1_ffd = torch.bmm(b1,p1+dp_1)
                 points2_ffd = torch.bmm(b1,p2+dp_2)
 
+                loss_chamfer, _ = chamfer_distance(points1_ffd, points2_ffd)
 
-                dist = self.chamferDist(points1_ffd,points2_ffd).detach().cpu().numpy()
+                dist = loss_chamfer.detach().cpu().numpy()
 
+                print(dist)
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
@@ -100,6 +110,7 @@ class FFD_learnable_contrast(object):
                     loss += feature_transform_regularizer(trans_feat) * 0.001
                 epoch_loss  += loss.item()
                 loss.backward()
+
                 self.optimizer.step()
                 self.scheduler.step()
 
@@ -107,7 +118,7 @@ class FFD_learnable_contrast(object):
                                "train loss": loss.item(),
                                "Train epoch": epoch,
                                "Learning rate":self.scheduler.get_last_lr()[0],
-                               "chamferDist":dist,
+                               # "chamferDist":dist,
                                },
                               )
 
