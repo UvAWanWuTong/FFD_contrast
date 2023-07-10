@@ -77,7 +77,7 @@ class FFD_learnable_contrast(object):
                 # FFD learnable
                 dp_1 = deform_net_1(F1).to(self.args.device)
                 dp_2 = deform_net_2(F2).to(self.args.device)
-                # normalization
+
 
 
                 # perfom ffd
@@ -94,10 +94,12 @@ class FFD_learnable_contrast(object):
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
                 # get the feature after FFD
-                F1, trans, trans_feat, = classifier(points1_ffd)
-                F2, trans, trans_feat, = classifier(points2_ffd)
+                F1, _, _, = classifier(points1_ffd)
+                F2, _, _, = classifier(points2_ffd)
 
-
+                # get the feature ofd the control points
+                dp_1_feat, _, _, = classifier(dp_1)
+                dp_2_feat, _, _, = classifier(dp_2)
 
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
@@ -106,12 +108,14 @@ class FFD_learnable_contrast(object):
 
                 # NCE loss afte deformed control points
 
-                loss_dp = criterion(dp_1,dp_2)
+                loss_dp = criterion(dp_1_feat,dp_2_feat)
+
 
 
 
                 if self.args.regularization:
                     loss -= loss_dp
+
                 epoch_loss  += loss.item()
 
                 loss.backward()
@@ -124,7 +128,7 @@ class FFD_learnable_contrast(object):
                                "dp loss":loss_dp.item(),
                                "Train epoch": epoch,
                                "Learning rate":self.scheduler.get_last_lr()[0],
-                               # "chamferDist":dist,
+
 
 
                                },

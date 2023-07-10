@@ -189,6 +189,8 @@ class PointNetCls(nn.Module):
         x = self.fc4(x)
         feature = F.log_softmax(x, dim=1)
 
+        return  feature,trans,trans_feat
+
 
 
 
