@@ -80,7 +80,6 @@ class FFD_learnable_contrast(object):
                 points2_ffd = torch.bmm(b1,p2+dp_2)
 
 
-                dist = self.distance_metric(points1_ffd,points2_ffd).detach().cpu().numpy()
 
                 print()
 
@@ -104,12 +103,12 @@ class FFD_learnable_contrast(object):
                 self.optimizer.step()
                 self.scheduler.step()
 
-                # self.writer.log({
-                #                "train loss": loss.item(),
-                #                "Train epoch": epoch,
-                #                "Learning rate":self.scheduler.get_last_lr()[0],
-                #                },
-                #               )
+                self.writer.log({
+                               "train loss": loss.item(),
+                               "Train epoch": epoch,
+                               "Learning rate":self.scheduler.get_last_lr()[0],
+                               },
+                              )
 
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))

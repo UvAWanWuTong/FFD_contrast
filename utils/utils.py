@@ -4,6 +4,8 @@ import shutil
 import torch
 import yaml
 import numpy as np
+import  torch
+from torch import nn
 
 def clean_dir(directory):
         shutil.rmtree(os.path.join(directory))
@@ -141,6 +143,10 @@ def np_to_tensor(x):
 
     return torch.from_numpy(x.astype(np.float32))
 
+
+def normalize_pointcloud_tensor(x):
+
+    return nn.functional.normalize(x,p=2.0,dim=1)
 
 
 

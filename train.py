@@ -16,6 +16,7 @@ from tqdm import tqdm
 import wandb
 
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
@@ -160,6 +161,8 @@ def main():
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
 
 
+
+
     num_batch = len(dataset) / opt.batchSize
 
     if opt.model != '':
@@ -167,21 +170,21 @@ def main():
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    # wandb.init(project="FFD_Contrast_learnable",
-    #                    name=opt.expriment_name,
-    #                    config={
-    #                        "architecture":"pointnet-classification",
-    #                        "batch_size":opt.batchSize,
-    #                        "epochs": opt.nepoch,
-    #                        "dataset":'ModelNet40',
-    #                        "ffd_points" : opt.ffd_points,
-    #                        "ffd_control" : opt.ffd_control,
-    #                        "lr" : opt.lr,
-    #                        "step_size" : opt.step_size,
-    #                        "decay" : opt.decay
-    # }
-    #                    )
+    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    wandb.init(project="FFD_Contrast_learnable",
+                       name=opt.expriment_name,
+                       config={
+                           "architecture":"pointnet-classification",
+                           "batch_size":opt.batchSize,
+                           "epochs": opt.nepoch,
+                           "dataset":'ModelNet40',
+                           "ffd_points" : opt.ffd_points,
+                           "ffd_control" : opt.ffd_control,
+                           "lr" : opt.lr,
+                           "step_size" : opt.step_size,
+                           "decay" : opt.decay
+    }
+                       )
 
 
 

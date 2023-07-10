@@ -4,6 +4,13 @@
     <list>
       <list>
         <remote-mappings server-id="python@2c53d2cb-3d0e-44fa-bb72-f75f7dbbc40a" />
+        <remote-mappings server-id="python@sftp://wan@146.50.28.135:22/home/wan/miniconda3/envs/why-FFD/bin/python3.7">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home/wan/Workplace-why/FFD_contrast" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

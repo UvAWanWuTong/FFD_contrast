@@ -47,6 +47,9 @@ class FFD_contrast(object):
 
                 if self.args.feature_transform:
                     loss += feature_transform_regularizer(trans_feat) * 0.001
+
+
+
                 epoch_loss  += loss.item()
                 loss.backward()
                 self.optimizer.step()
