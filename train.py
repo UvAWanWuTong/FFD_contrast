@@ -1,4 +1,3 @@
-from __future__ import print_function
 import argparse
 import os
 import random
@@ -10,9 +9,6 @@ from utils.criterion import  NCESoftmaxLoss
 from utils.FFD_contrast import FFD_contrast
 from utils.FFD_learnable_contrast import FFD_learnable_contrast
 import torch.backends.cudnn as cudnn
-import tqdm
-import torch.nn.functional as F
-from tqdm import tqdm
 import wandb
 
 
