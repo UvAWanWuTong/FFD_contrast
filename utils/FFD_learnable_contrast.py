@@ -112,7 +112,7 @@ class FFD_learnable_contrast(object):
 
                 # NCE loss afte deformed control points
 
-                loss_dp = criterion(dp_1_feat,dp_2_feat) * 0.1
+                loss_dp = criterion(dp_1_feat,dp_2_feat) * 0.01
 
 
 
