@@ -54,7 +54,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '--regularization', default=False, help='use of regulariztion term during the learnable FFD')
+    '--regularization', default=False, action='store_true',help='use of regulariztion term during the learnable FFD')
 
 
 

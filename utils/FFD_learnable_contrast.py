@@ -98,6 +98,10 @@ class FFD_learnable_contrast(object):
                 F2, _, _, = classifier(points2_ffd)
 
                 # get the feature ofd the control points
+
+                dp_1 = dp_1.transpose(2, 1).to(self.args.device)
+                dp_2 = dp_2.transpose(2, 1).to(self.args.device)
+
                 dp_1_feat, _, _, = classifier(dp_1)
                 dp_2_feat, _, _, = classifier(dp_2)
 
@@ -108,7 +112,7 @@ class FFD_learnable_contrast(object):
 
                 # NCE loss afte deformed control points
 
-                loss_dp = criterion(dp_1_feat,dp_2_feat)
+                loss_dp = criterion(dp_1_feat,dp_2_feat) * 0.1
 
 
 
