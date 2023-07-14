@@ -1,3 +1,4 @@
+import wandb
 from __future__ import print_function
 import argparse
 import os
@@ -10,7 +11,6 @@ from model.pointnet.dataset import ModelNetDataset
 from model.pointnet.model import PointNetCls, feature_transform_regularizer
 import torch.nn.functional as F
 from tqdm import tqdm
-import wandb
 import re
 import torch.backends.cudnn as cudnn
 from utils.sampler import Normalize
