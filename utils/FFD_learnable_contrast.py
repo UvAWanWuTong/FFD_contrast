@@ -102,9 +102,6 @@ class FFD_learnable_contrast(object):
                 dp_1 = dp_1.transpose(2, 1).to(self.args.device)
                 dp_2 = dp_2.transpose(2, 1).to(self.args.device)
 
-                dp_1_feat, _, _, = classifier(dp_1)
-                dp_2_feat, _, _, = classifier(dp_2)
-
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
                 # NCE loss after deformed objects
@@ -117,6 +114,8 @@ class FFD_learnable_contrast(object):
 
 
                 if self.args.regularization:
+                    dp_1_feat, _, _, = classifier(dp_1)
+                    dp_2_feat, _, _, = classifier(dp_2)
                     loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
                     loss -= loss_dp
 
