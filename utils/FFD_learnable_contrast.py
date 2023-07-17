@@ -112,12 +112,12 @@ class FFD_learnable_contrast(object):
 
                 # NCE loss afte deformed control points
 
-                loss_dp = criterion(dp_1_feat,dp_2_feat) * 0.01
 
 
 
 
                 if self.args.regularization:
+                    loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
                     loss -= loss_dp
 
                 epoch_loss  += loss.item()
