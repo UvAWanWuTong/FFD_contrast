@@ -126,16 +126,27 @@ class FFD_learnable_contrast(object):
                 self.optimizer.step()
                 self.scheduler.step()
 
-                self.writer.log({
-                               "train loss": loss.item(),
-                               "dp loss":loss_dp.item(),
-                               "Train epoch": epoch,
-                               "Learning rate":self.scheduler.get_last_lr()[0],
+
+                if self.args.regularization:
+                    self.writer.log({
+                                   "train loss": loss.item(),
+                                   "dp loss":loss_dp.item(),
+                                   "Train epoch": epoch,
+                                   "Learning rate":self.scheduler.get_last_lr()[0],
 
 
 
-                               },
-                              )
+                                   },
+                                  )
+                else:
+                    self.writer.log({
+                        "train loss": loss.item(),
+                        "Train epoch": epoch,
+                        "Learning rate": self.scheduler.get_last_lr()[0],
+
+                    },
+                    )
+
 
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
