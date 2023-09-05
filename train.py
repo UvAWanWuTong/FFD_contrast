@@ -4,11 +4,12 @@ import os
 import random
 import torch.optim as optim
 import torch.utils.data
-from model.pointnet.dataset import Contrastive_ModelNetDataset,Contrastive_ModelNetDataset_learnable
+from model.pointnet.dataset import Contrastive_ModelNetDataset
 from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 from utils.FFD_contrast import FFD_contrast
 from utils.FFD_learnable_contrast import FFD_learnable_contrast
+from utils.FFD_random_contrast import FFD_random_contrast
 import torch.backends.cudnn as cudnn
 
 
@@ -50,7 +51,7 @@ parser.add_argument(
     '--sampler', type=str, default='random',help='choose of sampler'
 )
 parser.add_argument(
-    '--task_type', type=str, default='learnable',help='type of ffd deformation'
+    '--task_type', type=str, default='learnable',help='type of ffd deformation, avaliable choices: random,mix,multi'
 )
 
 parser.add_argument(
@@ -96,9 +97,7 @@ def main():
 
     if opt.dataset_type == 'modelnet40':
 
-        if opt.task_type != 'learnable':
             # random FFD and customized FFD
-            #
             dataset = Contrastive_ModelNetDataset(
                     root=opt.dataset,
                     npoints=opt.num_points,
@@ -106,16 +105,7 @@ def main():
                     ffd_points_axis = opt.ffd_points_axis,
                     ffd_control = opt.ffd_control,
                 )
-        else:
-            dataset = Contrastive_ModelNetDataset_learnable(
 
-                root=opt.dataset,
-                npoints=opt.num_points,
-                split='train',
-                ffd_points_axis = opt.ffd_points_axis,
-                ffd_control = opt.ffd_control,
-
-            )
 
     else:
         exit('wrong dataset type')
@@ -137,6 +127,12 @@ def main():
 
     model_list = None
     model = Contrastive_PointNet(feature_transform=opt.feature_transform)
+
+
+    try:
+        opt.task_type not in ['leanable','random']
+    except Exception :
+         print('No avaliable task type ')
 
     if opt.task_type == 'learnable':
 
@@ -171,7 +167,7 @@ def main():
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
     wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast_learnable",
+    wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
                        name=opt.expriment_name,
                        config={
                            "architecture":"pointnet-classification",
@@ -195,10 +191,11 @@ def main():
     print('current batch size',opt.batchSize)
 
 
-
-    # ffd_contrast = FFD_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt )
-    ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list
+    if opt.task_type == "learnable":
+         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list
                                            )
+    elif opt.task_type == "random":
+        ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt)
 
     ffd_contrast.train(train_dataloader)
 

@@ -40,24 +40,21 @@ class FFD_learnable_contrast(object):
             counter = 0
             epoch_loss = 0
             for data in  train_loader:
-                (b1,p1), (b2,p2) = data
-                b1 = b1.to(self.args.device)
-                p1 = p1.to(self.args.device)
-                b2 = b2.to(self.args.device)
-                p2 = p2.to(self.args.device)
+                (b,p) = data
+                b = b.to(self.args.device)
+                p = p.to(self.args.device)
+
 
 
 
 
                 # perfom FFD deformation
 
-                points1 = torch.bmm(b1, p1)
-                points2 = torch.bmm(b2, p2)
+                points = torch.bmm(b, p)
 
                 #points normlaize
 
-                points1 = points1.transpose(2, 1).to(self.args.device)
-                points2 = points2.transpose(2, 1).to(self.args.device)
+                points = points.transpose(2, 1).to(self.args.device)
 
                 self.optimizer.zero_grad()
                 classifier = self.model_list[0].train()
@@ -66,23 +63,22 @@ class FFD_learnable_contrast(object):
 
 
 
-                F1, trans, trans_feat = classifier(points1)
-                F2, trans, trans_feat = classifier(points2)
+                feature, _, _ = classifier(points)
 
 
-                F1 = normalize_pointcloud_tensor(F1)
-                F2 = normalize_pointcloud_tensor(F2)
+                n_feature = normalize_pointcloud_tensor(feature)
 
                 # get FFD deformation strategy
                 # FFD learnable
-                dp_1 = deform_net_1(F1).to(self.args.device)
-                dp_2 = deform_net_2(F2).to(self.args.device)
+                dp_1 = deform_net_1(n_feature).to(self.args.device)
+                dp_2 = deform_net_2(n_feature).to(self.args.device)
 
 
 
                 # perfom ffd
-                points1_ffd = torch.bmm(b1,p1+dp_1)
-                points2_ffd = torch.bmm(b1,p2+dp_2)
+                points1_ffd = torch.bmm(b,p+dp_1)
+                points2_ffd = torch.bmm(b,p+dp_2)
+
                 # normalization
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
