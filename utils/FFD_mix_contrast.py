@@ -176,20 +176,13 @@ class FFD_mix_contrast(object):
 
 
                 #save deform net
-                deform_net_name = 'deform_net_1.pth.tar'
+                deform_net_name = 'deform_net_mix.pth.tar'
                 save_checkpoint({
-                    'state_dict': deform_net_1.state_dict(),
+                    'state_dict': deform_net.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
                 self.min_loss = loss
 
-
-                deform_net_name = 'deform_net_2.pth.tar'
-                save_checkpoint({
-                    'state_dict': deform_net_2.state_dict(),
-                    'optimizer': self.optimizer.state_dict(),
-                }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
-                self.min_loss = loss
 
 
 
