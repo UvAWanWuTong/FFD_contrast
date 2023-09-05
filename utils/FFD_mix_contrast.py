@@ -20,7 +20,7 @@ from torch  import nn
 # from chamferdist import ChamferDistance
 
 
-class FFD_learnable_contrast(object):
+class FFD_mix_contrast(object):
     def __init__(self,*args,**kwargs):
         self.args = kwargs['args']
         self.model = kwargs['model'].to(self.args.device)

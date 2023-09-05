@@ -10,6 +10,7 @@ from utils.criterion import  NCESoftmaxLoss
 from utils.FFD_contrast import FFD_contrast
 from utils.FFD_learnable_contrast import FFD_learnable_contrast
 from utils.FFD_random_contrast import FFD_random_contrast
+from utils.FFD_mix_contrast import FFD_mix_contrast
 import torch.backends.cudnn as cudnn
 
 
@@ -25,7 +26,6 @@ parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument(
     '--outf', type=str, default='checkpoints_train', help='output folder')
-
 parser.add_argument(
     '--model', type=str, default='', help='model path')
 parser.add_argument(
@@ -134,7 +134,7 @@ def main():
     except Exception :
          print('No avaliable task type ')
 
-    if opt.task_type == 'learnable':
+    if opt.task_type == 'learnable' or opt.task_type == 'mix':
 
         deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
         deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
@@ -192,10 +192,17 @@ def main():
 
 
     if opt.task_type == "learnable":
-         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch,args =opt,model_list=model_list
-                                           )
+         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list)
+
     elif opt.task_type == "random":
         ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt)
+
+
+    elif opt.task_type == "mix":
+        ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list)
+
+
+
 
     ffd_contrast.train(train_dataloader)
 
