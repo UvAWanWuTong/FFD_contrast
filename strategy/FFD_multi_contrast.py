@@ -16,11 +16,15 @@ import logging
 from tqdm.auto import tqdm
 import sys
 import torch
+import numpy as np
 from torch  import nn
 # from chamferdist import ChamferDistance
 
+from utils.emd_ import emd_module
+from utils.cd.chamferdist import ChamferDistance as CD
 
-class FFD_learnable_contrast(object):
+
+class FFD_multi_contrast(object):
     def __init__(self,*args,**kwargs):
         self.args = kwargs['args']
         self.model = kwargs['model'].to(self.args.device)
@@ -30,8 +34,64 @@ class FFD_learnable_contrast(object):
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
+        self.mixrates= 0.5
+        self.alpha = 0.5
+        self.EMD = emd_module.emdModule()
+        self.cd = CD()
         # self.regularization =  kwargs['regularization']
         # self.chamferDist = ChamferDistance()
+
+
+    def pointmixup(self,align,mixrates,xyz1,xyz2):
+        mix_rate = torch.tensor(mixrates).cuda().float()
+        mix_rate = mix_rate.unsqueeze_(1).unsqueeze_(2)
+        mix_rate_expand_xyz = mix_rate.expand(xyz1.shape)
+        B = xyz1.shape[0]
+
+        if align:
+            with torch.no_grad():
+                cd_all = torch.zeros([60, B]).cuda()
+                for i in range(60):
+                    theta_temp = (torch.ones([B]) * (i / 60 * 3.1415927))
+                    refl = torch.zeros([3, 3, B]).cuda()
+                    cos = torch.cos(theta_temp)
+                    sin = torch.sin(theta_temp)
+                    refl[0][0] = 1 - sin ** 2 * 2
+                    refl[0][2] = 2 * sin * cos
+                    refl[1][1] = 1
+                    refl[2][0] = 2 * sin * cos
+                    refl[2][2] = 1 - cos ** 2 * 2
+
+                    refl = refl.permute([2, 0, 1])
+                    xyz_refl = torch.matmul(xyz1, refl)
+                    cd0, cd1, _, _ = self.cd(xyz1, xyz_refl)
+                    cd_all[i] = (cd0 + cd1).sum(dim=1)
+
+                _, ind_all = torch.min(cd_all, dim=0)
+                thetas = (ind_all.float() / 60 * 3.1415927)
+
+
+                coss = torch.cos(thetas)
+                sins = torch.sin(thetas)
+                rota = torch.zeros([3, 3, B]).cuda()
+                rota[0][0] = coss
+                rota[0][2] = sins
+                rota[1][1] = 1
+                rota[2][0] = -sins
+                rota[2][2] = coss
+                rota = rota.permute([2, 0, 1])
+            xyz_2_rot = torch.matmul(xyz2, rota)
+            _, ass = self.EMD(xyz1,xyz_2_rot, 0.005, 300)  # mapping
+        else:
+            _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
+
+        ass = ass.long()
+        for i in range(B):
+            xyz2[i] = xyz2[i][ass[i]]
+
+        xyz = xyz1 * (1 - mix_rate_expand_xyz) + xyz2 * mix_rate_expand_xyz
+
+        return xyz
 
 
     def train(self,train_loader):
@@ -82,6 +142,13 @@ class FFD_learnable_contrast(object):
                 # normalization
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
+
+                B = points2_ffd.shape[0]
+                mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
+
+                points3 = self.pointmixup(False,mixrates,points1_ffd,points2_ffd)
+
+                print(points3)
 
                 # calculate the chamfer distances
                 # dist = self.chamferDist(points1_ffd, points2_ffd)

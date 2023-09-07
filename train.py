@@ -7,10 +7,11 @@ import torch.utils.data
 from model.pointnet.dataset import Contrastive_ModelNetDataset
 from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
-from utils.FFD_contrast import FFD_contrast
-from utils.FFD_learnable_contrast import FFD_learnable_contrast
-from utils.FFD_random_contrast import FFD_random_contrast
-from utils.FFD_mix_contrast import FFD_mix_contrast
+from strategy.FFD_contrast import FFD_contrast
+from strategy.FFD_learnable_contrast import FFD_learnable_contrast
+from strategy.FFD_random_contrast import FFD_random_contrast
+from strategy.FFD_mix_contrast import FFD_mix_contrast
+from strategy.FFD_multi_contrast import FFD_multi_contrast
 import torch.backends.cudnn as cudnn
 
 
@@ -165,23 +166,23 @@ def main():
         model.load_state_dict(torch.load(opt.model)['state_dict'])
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
-
-    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
-                       name=opt.expriment_name,
-                       config={
-                           "architecture":"pointnet-classification",
-                           "batch_size":opt.batchSize,
-                           "epochs": opt.nepoch,
-                           "dataset":'ModelNet40',
-                           "ffd_points" : opt.ffd_points,
-                           "ffd_control" : opt.ffd_control,
-                           "lr" : opt.lr,
-                           "step_size" : opt.step_size,
-                           "decay" : opt.decay
-    }
-                       )
-
+    #
+    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    # wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
+    #                    name=opt.expriment_name,
+    #                    config={
+    #                        "architecture":"pointnet-classification",
+    #                        "batch_size":opt.batchSize,
+    #                        "epochs": opt.nepoch,
+    #                        "dataset":'ModelNet40',
+    #                        "ffd_points" : opt.ffd_points,
+    #                        "ffd_control" : opt.ffd_control,
+    #                        "lr" : opt.lr,
+    #                        "step_size" : opt.step_size,
+    #                        "decay" : opt.decay
+    # }
+    #                    )
+    #
 
     print('Iinitialization of logger complete\n')
 
@@ -200,8 +201,9 @@ def main():
     elif opt.task_type == "mix":
         ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list)
 
-
-
+    elif opt.task_type == "multi":
+        ffd_contrast = FFD_multi_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb,
+                                              num_batch=num_batch, args=opt, model_list=model_list)
 
     ffd_contrast.train(train_dataloader)
 
