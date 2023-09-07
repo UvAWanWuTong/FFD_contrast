@@ -17,7 +17,6 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
-# from chamferdist import ChamferDistance
 
 
 class FFD_mix_contrast(object):

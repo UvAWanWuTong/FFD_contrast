@@ -183,7 +183,6 @@ def main():
                        )
 
 
-
     print('Iinitialization of logger complete\n')
 
 
