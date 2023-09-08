@@ -130,10 +130,10 @@ def main():
     model = Contrastive_PointNet(feature_transform=opt.feature_transform)
 
 
-    try:
-        opt.task_type not in ['leanable','random']
-    except Exception :
-         print('No avaliable task type ')
+    # try:
+    #     opt.task_type not in ['leanable','random']
+    # except Exception :
+    #      print('No avaliable task type ')
 
     if opt.task_type != 'random':
 
