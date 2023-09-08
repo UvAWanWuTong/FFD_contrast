@@ -11,6 +11,13 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@sftp://wan@146.50.28.135:22/home/wan/miniconda3/envs/why-pointnet/bin/python3.7">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home/wan/Workplace-why/FFD_contrast" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

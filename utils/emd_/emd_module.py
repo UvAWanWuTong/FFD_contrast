@@ -36,7 +36,7 @@ class emdFunction(Function):
 
         assert(n == m)
         assert(xyz1.size()[0] == xyz2.size()[0])
-        assert(n % 128 == 0)
+        # assert(n % 128 == 0)
         assert(batchsize <= 512)
 
         xyz1 = xyz1.contiguous().float().cuda()

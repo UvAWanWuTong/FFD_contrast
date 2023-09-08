@@ -135,7 +135,7 @@ def main():
     except Exception :
          print('No avaliable task type ')
 
-    if opt.task_type == 'learnable' or opt.task_type == 'mix':
+    if opt.task_type != 'random':
 
         deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
         deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
@@ -166,23 +166,23 @@ def main():
         model.load_state_dict(torch.load(opt.model)['state_dict'])
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
-    #
-    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    # wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
-    #                    name=opt.expriment_name,
-    #                    config={
-    #                        "architecture":"pointnet-classification",
-    #                        "batch_size":opt.batchSize,
-    #                        "epochs": opt.nepoch,
-    #                        "dataset":'ModelNet40',
-    #                        "ffd_points" : opt.ffd_points,
-    #                        "ffd_control" : opt.ffd_control,
-    #                        "lr" : opt.lr,
-    #                        "step_size" : opt.step_size,
-    #                        "decay" : opt.decay
-    # }
-    #                    )
-    #
+
+    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
+                       name=opt.expriment_name,
+                       config={
+                           "architecture":"pointnet-classification",
+                           "batch_size":opt.batchSize,
+                           "epochs": opt.nepoch,
+                           "dataset":'ModelNet40',
+                           "ffd_points" : opt.ffd_points,
+                           "ffd_control" : opt.ffd_control,
+                           "lr" : opt.lr,
+                           "step_size" : opt.step_size,
+                           "decay" : opt.decay
+    }
+                       )
+
 
     print('Iinitialization of logger complete\n')
 
