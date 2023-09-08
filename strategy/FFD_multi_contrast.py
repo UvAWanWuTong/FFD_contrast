@@ -20,8 +20,8 @@ import numpy as np
 from torch  import nn
 # from chamferdist import ChamferDistance
 
-from utils.emd_ import emd_module
-from utils.cd.chamferdist import ChamferDistance as CD
+# from utils.emd_ import emd_module
+# from utils.cd.chamferdist import ChamferDistance as CD
 
 
 class FFD_multi_contrast(object):
@@ -36,8 +36,8 @@ class FFD_multi_contrast(object):
         self.model_list =  kwargs['model_list']
         self.mixrates= 0.5
         self.alpha = 0.5
-        self.EMD = emd_module.emdModule()
-        self.cd = CD()
+        # self.EMD = emd_module.emdModule()
+        # self.cd = CD()
         # self.regularization =  kwargs['regularization']
         # self.chamferDist = ChamferDistance()
 
