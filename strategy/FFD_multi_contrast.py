@@ -129,8 +129,11 @@ class FFD_multi_contrast(object):
 
                 # NCE loss after deformed objects
 
-                loss_mixup = torch.log( 0.1 * (criterion(F1, F3) +  criterion(F2, F3)))
-                loss = criterion(F1, F2) + loss_mixup
+                loss_mixup =  0.01 * (criterion(F1, F3) +  criterion(F2, F3))
+                loss = criterion(F1, F2) - loss_mixup
+
+
+
 
                 # NCE loss afte deformed control points
 
