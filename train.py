@@ -5,7 +5,7 @@ import random
 import torch.optim as optim
 import torch.utils.data
 from model.pointnet.dataset import Contrastive_ModelNetDataset
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
+from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net,Deform_Net_2
 from utils.criterion import  NCESoftmaxLoss
 from strategy.FFD_contrast import FFD_contrast
 from strategy.FFD_learnable_contrast import FFD_learnable_contrast
@@ -58,7 +58,10 @@ parser.add_argument(
 parser.add_argument(
     '--regularization', default=False, action='store_true',help='use of regulariztion term during the learnable FFD')
 
+parser.add_argument(
+    '--dfnet', type=str, default='random', help='the architecture of deform net choose :3,2,1'
 
+)
 
 
 def main():
@@ -136,9 +139,9 @@ def main():
     #      print('No avaliable task type ')
 
     if opt.task_type != 'random':
-
-        deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        print('Deform net 2 layer')
+        deform_net1 =  Deform_Net_2(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  Deform_Net_2(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},
@@ -167,21 +170,21 @@ def main():
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
-    wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
-    wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
-                       name=opt.expriment_name,
-                       config={
-                           "architecture":"pointnet-classification",
-                           "batch_size":opt.batchSize,
-                           "epochs": opt.nepoch,
-                           "dataset":'ModelNet40',
-                           "ffd_points" : opt.ffd_points,
-                           "ffd_control" : opt.ffd_control,
-                           "lr" : opt.lr,
-                           "step_size" : opt.step_size,
-                           "decay" : opt.decay
-    }
-                       )
+    # wandb.login(key='d27f3b3e72d749fb99315e0e86c6b36b6e23617e')
+    # wandb.init(project="FFD_Contrast_{task_type}".format(task_type = opt.task_type),
+    #                    name=opt.expriment_name,
+    #                    config={
+    #                        "architecture":"pointnet-classification",
+    #                        "batch_size":opt.batchSize,
+    #                        "epochs": opt.nepoch,
+    #                        "dataset":'ModelNet40',
+    #                        "ffd_points" : opt.ffd_points,
+    #                        "ffd_control" : opt.ffd_control,
+    #                        "lr" : opt.lr,
+    #                        "step_size" : opt.step_size,
+    #                        "decay" : opt.decay
+    # }
+    #                    )
 
 
     print('Iinitialization of logger complete\n')

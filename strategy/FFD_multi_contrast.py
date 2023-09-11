@@ -20,7 +20,7 @@ import numpy as np
 from torch  import nn
 # from chamferdist import ChamferDistance
 
-# from utils.emd_ import emd_module
+from utils.emd_ import emd_module
 # from utils.cd.chamferdist import ChamferDistance as CD
 
 
@@ -36,7 +36,7 @@ class FFD_multi_contrast(object):
         self.model_list =  kwargs['model_list']
         self.mixrates= 0.5
         self.alpha = 0.5
-        # self.EMD = emd_module.emdModule()
+        self.EMD = emd_module.emdModule()
         # self.cd = CD()
         # self.regularization =  kwargs['regularization']
         # self.chamferDist = ChamferDistance()
@@ -46,7 +46,10 @@ class FFD_multi_contrast(object):
         mix_rate = torch.tensor(mixrates).to(self.args.device).float()
         mix_rate = mix_rate.unsqueeze_(1).unsqueeze_(2)
         mix_rate_expand_xyz = mix_rate.expand(xyz1.shape).to(self.args.device)
-
+        _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
+        B = xyz1.shape[0]
+        for i in range(B):
+            xyz2[i] = xyz2[i][ass[i]]
         xyz = xyz1 * (1 - mix_rate_expand_xyz) + xyz2 * mix_rate_expand_xyz
 
         return xyz
@@ -108,6 +111,9 @@ class FFD_multi_contrast(object):
 
 
 
+
+
+
                 # calculate the chamfer distances
                 # dist = self.chamferDist(points1_ffd, points2_ffd)
                 # dist = dist.detach().cpu().item()
@@ -129,8 +135,14 @@ class FFD_multi_contrast(object):
 
                 # NCE loss after deformed objects
 
-                loss_mixup =  0.01 * (criterion(F1, F3) +  criterion(F2, F3))
-                loss = criterion(F1, F2) - loss_mixup
+
+                loss = criterion(F1, F3) + criterion(F2, F3) + criterion(F1, F2)
+
+
+
+
+
+
 
 
 
@@ -161,7 +173,6 @@ class FFD_multi_contrast(object):
                     self.writer.log({
                                    "train loss": loss.item(),
                                    "dp loss":loss_dp.item(),
-                                   "mixup":loss_mixup.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
@@ -173,7 +184,6 @@ class FFD_multi_contrast(object):
                     self.writer.log({
                         "train loss": loss.item(),
                         "Train epoch": epoch,
-                        "mixup":loss_mixup.item(),
                         "Learning rate": self.scheduler.get_last_lr()[0],
 
                     },

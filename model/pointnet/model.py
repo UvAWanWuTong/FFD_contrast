@@ -9,10 +9,6 @@ import torch.nn.functional as F
 
 
 
-
-
-
-
 class Deform_Net(nn.Module):
     def __init__(self, in_features, out_features):
 
@@ -22,6 +18,23 @@ class Deform_Net(nn.Module):
 
     def forward(self,x):
         dp = self.fc(x)
+        dp = torch.reshape(dp,(x.shape[0],-1,3))
+        return dp
+
+
+
+class Deform_Net_2(nn.Module):
+    def __init__(self, in_features, out_features):
+
+        super(Deform_Net_2, self).__init__()
+        self.fc1 = nn.Linear(in_features, 128)
+        self.fc2 = nn.Linear(128,out_features)
+
+        self.bn1 = nn.BatchNorm1d()
+
+    def forward(self,x):
+        dp = F.relu(self.bn1(self.fc1(x)))
+        dp = self.fc2(dp)
         dp = torch.reshape(dp,(x.shape[0],-1,3))
         return dp
 
@@ -147,7 +160,7 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 class Contrastive_PointNet(nn.Module):
-    def __init__(self, feature_transform=False):
+    def __init__(self, feature_transform=False, feature_ize = 128) :
         super(Contrastive_PointNet, self).__init__()
 
         self.feature_transform = feature_transform
@@ -155,7 +168,7 @@ class Contrastive_PointNet(nn.Module):
         # # self.fc1 = nn.Linear(1024, 1024)
         # # self.relu = nn.ReLU()
         # self.fc2 = nn.Linear(1024, 128)
-        self.fc1 = nn.Linear(1024, 128)
+        self.fc1 = nn.Linear(1024, feature_ize)
 
 
 
