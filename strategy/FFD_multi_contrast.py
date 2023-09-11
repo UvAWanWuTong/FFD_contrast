@@ -48,6 +48,7 @@ class FFD_multi_contrast(object):
         # mix_rate_expand_xyz = mix_rate.expand(xyz1.shape).to(self.args.device)
         _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
         B = xyz1.shape[0]
+        ass=ass.cpu().numpy()
         for i in range(B):
             xyz2[i] = xyz2[i][ass[i]]
         # xyz = xyz1 * (1 - mix_rate_expand_xyz) + xyz2 * mix_rate_expand_xyz
