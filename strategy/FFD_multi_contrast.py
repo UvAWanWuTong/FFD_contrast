@@ -43,14 +43,16 @@ class FFD_multi_contrast(object):
 
 
     def pointmixup(self,align,mixrates,xyz1,xyz2):
-        mix_rate = torch.tensor(mixrates).to(self.args.device).float()
-        mix_rate = mix_rate.unsqueeze_(1).unsqueeze_(2)
-        mix_rate_expand_xyz = mix_rate.expand(xyz1.shape).to(self.args.device)
+        # mix_rate = torch.tensor(mixrates).to(self.args.device).float()
+        # mix_rate = mix_rate.unsqueeze_(1).unsqueeze_(2)
+        # mix_rate_expand_xyz = mix_rate.expand(xyz1.shape).to(self.args.device)
         _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
         B = xyz1.shape[0]
         for i in range(B):
             xyz2[i] = xyz2[i][ass[i]]
-        xyz = xyz1 * (1 - mix_rate_expand_xyz) + xyz2 * mix_rate_expand_xyz
+        # xyz = xyz1 * (1 - mix_rate_expand_xyz) + xyz2 * mix_rate_expand_xyz
+        xyz = xyz1 * (1 -mixrates) + xyz2 * mixrates
+
 
         return xyz
 
@@ -103,9 +105,9 @@ class FFD_multi_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
-                B = points2_ffd.shape[0]
-                mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
-
+                # B = points2_ffd.shape[0]
+                # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
+                mixrates = 0.5
                 points3 = self.pointmixup(False,mixrates,points1_ffd,points2_ffd)
                 points3 = normalize_pointcloud_tensor(points3)
 

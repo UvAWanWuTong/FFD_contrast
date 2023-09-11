@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument(
-    '--num_points', type=int, default=3000, help='input point size')
+    '--num_points', type=int, default=3076, help='input point size')
 parser.add_argument(
     '--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument(
@@ -139,9 +139,8 @@ def main():
     #      print('No avaliable task type ')
 
     if opt.task_type != 'random':
-        print('Deform net 2 layer')
-        deform_net1 =  Deform_Net_2(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  Deform_Net_2(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},

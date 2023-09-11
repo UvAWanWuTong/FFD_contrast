@@ -5,7 +5,14 @@
       <paths name="wan@146.50.28.135:22 password">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/wan/Workplace-why/FFD_contrast" local="$PROJECT_DIR$" />
+            <mapping deploy="/Workplace-why/FFD_contrast" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="wan@146.50.28.135:22 password (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/Workplace-why/FFD_contrast" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
