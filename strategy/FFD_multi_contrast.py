@@ -139,7 +139,7 @@ class FFD_multi_contrast(object):
                 # NCE loss after deformed objects
 
 
-                loss = criterion(F1, F3) + criterion(F2, F3) + criterion(F1, F2)
+                loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2)
 
 
 
