@@ -90,8 +90,10 @@ class FFD_mix_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 # calculate the chamfer distances
-                # dist = self.chamferDist(points1_ffd, points2_ffd)
-                # dist = dist.detach().cpu().item()
+
+                if self.args.regularization:
+                    cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
+                    loss_chamfer = torch.mean(points1_ffd) + torch.mean(points1_ffd)
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
@@ -110,16 +112,12 @@ class FFD_mix_contrast(object):
                 loss = criterion(F1, F2)
 
                 # NCE loss afte deformed control points
-
-
-
-
-
                 if self.args.regularization:
-                    dp_1_feat, _, _, = classifier(dp_1)
-                    dp_2_feat, _, _, = classifier(dp_2)
-                    loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
-                    loss -= loss_dp
+                    loss -= loss_chamfer
+
+
+
+
 
                 epoch_loss  += loss.item()
 
@@ -132,7 +130,7 @@ class FFD_mix_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "dp loss":loss_dp.item(),
+                                   "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 

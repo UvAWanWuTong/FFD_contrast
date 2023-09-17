@@ -104,10 +104,7 @@ class FFD_multi_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    # dp_1_feat, _, _, = classifier(dp_1)
-                    # dp_2_feat, _, _, = classifier(dp_2)
-                    # loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
-                    # loss -= loss_dp
+
 
                     cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
                     loss_chamfer = torch.mean(points1_ffd) + torch.mean(points1_ffd)
@@ -144,8 +141,11 @@ class FFD_multi_contrast(object):
 
                 # NCE loss after deformed objects
 
+                if self.args.regularization:
 
-                loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2)
+                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2) - loss_chamfer
+                else:
+                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2)
 
 
 
@@ -172,10 +172,11 @@ class FFD_multi_contrast(object):
                 self.scheduler.step()
 
 
+
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "dp loss":loss_chamfer.item(),
+                                   "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
