@@ -18,10 +18,9 @@ import sys
 import torch
 import numpy as np
 from torch  import nn
-# from chamferdist import ChamferDistance
 
 from utils.emd_ import emd_module
-# from utils.cd.chamferdist import ChamferDistance as CD
+from utils.cd.chamferdist import ChamferDistance as CD
 
 
 class FFD_multi_contrast(object):
@@ -37,9 +36,7 @@ class FFD_multi_contrast(object):
         self.mixrates= 0.5
         self.alpha = 0.5
         self.EMD = emd_module.emdModule()
-        # self.cd = CD()
-        # self.regularization =  kwargs['regularization']
-        # self.chamferDist = ChamferDistance()
+        self.cd = CD()
 
 
     def pointmixup(self,align,mixrates,xyz1,xyz2):
@@ -106,6 +103,15 @@ class FFD_multi_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
+                if self.args.regularization:
+                    # dp_1_feat, _, _, = classifier(dp_1)
+                    # dp_2_feat, _, _, = classifier(dp_2)
+                    # loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
+                    # loss -= loss_dp
+
+                    cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
+                    loss_chamfer = torch.mean(points1_ffd) + torch.mean(points1_ffd)
+
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
                 mixrates = 0.5
@@ -156,12 +162,6 @@ class FFD_multi_contrast(object):
 
 
 
-                if self.args.regularization:
-                    dp_1_feat, _, _, = classifier(dp_1)
-                    dp_2_feat, _, _, = classifier(dp_2)
-                    loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
-                    loss -= loss_dp
-
 
 
                 epoch_loss  += loss.item()
@@ -175,7 +175,7 @@ class FFD_multi_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "dp loss":loss_dp.item(),
+                                   "dp loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
