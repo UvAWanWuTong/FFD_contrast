@@ -20,7 +20,7 @@ import numpy as np
 from torch  import nn
 
 from utils.emd_ import emd_module
-# from chamferdist import ChamferDistance
+from chamferdist import ChamferDistance
 
 torch.autograd.set_detect_anomaly(True)
 
@@ -37,7 +37,10 @@ class FFD_multi_contrast(object):
         self.model_list =  kwargs['model_list']
         self.mixrates= 0.5
         self.alpha = 0.5
+        self.chamferDist = ChamferDistance()
         self.EMD = emd_module.emdModule()
+
+
 
 
     def pointmixup(self,mixrates,xyz1,xyz2):

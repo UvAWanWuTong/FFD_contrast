@@ -22,6 +22,7 @@ from torch  import nn
 from utils.emd_ import emd_module
 
 
+
 class FFD_learnable_contrast(object):
     def __init__(self,*args,**kwargs):
         self.args = kwargs['args']
@@ -33,8 +34,8 @@ class FFD_learnable_contrast(object):
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
-        # self.chamferDist = ChamferDistance()
-        self.EMD = emd_module.emdModule()
+        self.chamferDist = ChamferDistance()
+        # self.EMD = emd_module.emdModule()
 
 
     def train(self,train_loader):
