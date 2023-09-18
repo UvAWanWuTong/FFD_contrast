@@ -19,6 +19,7 @@ import torch
 from torch  import nn
 
 
+
 class FFD_mix_contrast(object):
     def __init__(self,*args,**kwargs):
         self.args = kwargs['args']

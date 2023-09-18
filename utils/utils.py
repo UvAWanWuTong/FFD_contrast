@@ -149,7 +149,8 @@ def normalize_pointcloud_tensor(x):
     return nn.functional.normalize(x,p=2.0,dim=1)
 
 
-
+def chamfer_distance(cd,xyz1,xyz2):
+    return cd(xyz1.cpu() , xyz2.cpu(),bidirectional=True)
 
 def np_to_tensor(x):
 

@@ -87,9 +87,8 @@ class FFD_learnable_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    # loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True
-                    EMD,_ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
-                    loss_emd = torch.mean(EMD)
+                    with torch.no_grad():
+                        loss_chamfer = self.chamferDist(points1_ffd.cpu(), points2_ffd.cpu(), bidirectional=True).cuda()
 
 
 
@@ -115,7 +114,7 @@ class FFD_learnable_contrast(object):
 
 
                 if self.args.regularization:
-                    loss -= loss_emd
+                    loss -= loss_chamfer
 
 
 
@@ -130,7 +129,7 @@ class FFD_learnable_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                    "emd loss":loss_emd.item(),
+                                    "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 

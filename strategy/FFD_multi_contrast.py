@@ -22,6 +22,8 @@ from torch  import nn
 from utils.emd_ import emd_module
 # from chamferdist import ChamferDistance
 
+torch.autograd.set_detect_anomaly(True)
+
 
 class FFD_multi_contrast(object):
     def __init__(self,*args,**kwargs):
@@ -103,9 +105,10 @@ class FFD_multi_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    # loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True
-                    EMD, _ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
-                    loss_emd = torch.mean(EMD)
+                    with torch.no_grad():
+                     loss_chamfer =  self.chamferDist(points1_ffd.cpu(), points2_ffd.cpu(),bidirectional=True).cuda()
+                    # EMD, _ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
+                    # loss_emd = torch.sum(EMD)
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
@@ -141,7 +144,7 @@ class FFD_multi_contrast(object):
 
                 if self.args.regularization:
 
-                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2) - loss_emd
+                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2) - loss_chamfer
                 else:
                     loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2)
 
@@ -174,7 +177,7 @@ class FFD_multi_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "emd loss":loss_emd.item(),
+                                   "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
