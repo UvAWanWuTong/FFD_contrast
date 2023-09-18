@@ -17,7 +17,6 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
-from utils.cd.chamferdist import ChamferDistance as CD
 
 
 class FFD_mix_contrast(object):
@@ -32,7 +31,6 @@ class FFD_mix_contrast(object):
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
         # self.chamferDist = ChamferDistance()
-        self.cd = CD()
 
 
     def train(self,train_loader):
