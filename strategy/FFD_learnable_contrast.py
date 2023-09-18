@@ -18,7 +18,7 @@ import sys
 import torch
 from torch  import nn
 
-# from chamferdist import ChamferDistance
+from chamferdist import ChamferDistance
 from utils.emd_ import emd_module
 
 
