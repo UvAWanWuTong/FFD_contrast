@@ -86,10 +86,11 @@ class FFD_learnable_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
+                if self.args.regularization:
+                    loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True)
 
 
-                # calculate the chamfer distances
-                # dist = dist.detach().cpu().item()
+
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
@@ -97,11 +98,6 @@ class FFD_learnable_contrast(object):
                 F1, _, _, = classifier(points1_ffd)
                 F2, _, _, = classifier(points2_ffd)
 
-                if self.args.regularization:
-                    # cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
-                    loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True)
-
-                    # loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
 
                 # get the feature ofd the control points
 
@@ -130,7 +126,6 @@ class FFD_learnable_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-
                                     "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],

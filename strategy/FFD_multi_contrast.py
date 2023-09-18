@@ -105,9 +105,6 @@ class FFD_multi_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-
-
-                    cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
                     loss_chamfer = self.chamferDist(points1_ffd, points2_ffd, bidirectional=True)
 
                 # B = points2_ffd.shape[0]
