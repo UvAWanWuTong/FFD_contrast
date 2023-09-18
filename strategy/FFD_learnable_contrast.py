@@ -17,8 +17,9 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
-from utils.cd.chamferdist import ChamferDistance as CD
+# from utils.cd.chamferdist import ChamferDistance as CD
 
+from chamferdist import ChamferDistance
 
 class FFD_learnable_contrast(object):
     def __init__(self,*args,**kwargs):
@@ -31,8 +32,9 @@ class FFD_learnable_contrast(object):
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
-        # self.chamferDist = ChamferDistance()
-        self.cd = CD()
+        self.chamferDist = ChamferDistance()
+        # self.cd = CD()
+
 
 
     def train(self,train_loader):
@@ -85,8 +87,8 @@ class FFD_learnable_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
-                    loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
+                    loss_chamfer = self.ChamferDistance(points1_ffd, points1_ffd,bidirectional=True)
+                    # loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
 
                 # calculate the chamfer distances
                 # dist = self.chamferDist(points1_ffd, points2_ffd)
