@@ -17,7 +17,7 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
-# from utils.cd.chamferdist import ChamferDistance as CD
+from utils.cd.chamferdist import ChamferDistance as CD
 
 from chamferdist import ChamferDistance
 
@@ -33,7 +33,7 @@ class FFD_learnable_contrast(object):
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
         self.chamferDist = ChamferDistance()
-        # self.cd = CD()
+        self.cd = CD()
 
 
 
@@ -86,12 +86,9 @@ class FFD_learnable_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
-                if self.args.regularization:
-                    loss_chamfer = self.ChamferDistance(points1_ffd, points1_ffd,bidirectional=True)
-                    # loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
+
 
                 # calculate the chamfer distances
-                # dist = self.chamferDist(points1_ffd, points2_ffd)
                 # dist = dist.detach().cpu().item()
 
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
@@ -99,6 +96,12 @@ class FFD_learnable_contrast(object):
                 # get the feature after FFD
                 F1, _, _, = classifier(points1_ffd)
                 F2, _, _, = classifier(points2_ffd)
+
+                if self.args.regularization:
+                    # cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
+                    loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True)
+
+                    # loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
 
                 # get the feature ofd the control points
 
@@ -114,17 +117,7 @@ class FFD_learnable_contrast(object):
                 if self.args.regularization:
                     loss -= loss_chamfer
 
-                # NCE loss afte deformed control points
 
-
-
-
-
-                # if self.args.regularization:
-                #     dp_1_feat, _, _, = classifier(dp_1)
-                #     dp_2_feat, _, _, = classifier(dp_2)
-                #     loss_dp = criterion(dp_1_feat, dp_2_feat) * 0.01
-                #     loss -= loss_dp
 
                 epoch_loss  += loss.item()
 
@@ -137,7 +130,8 @@ class FFD_learnable_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "chamfer loss":loss_chamfer.item(),
+
+                                    "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
