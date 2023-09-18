@@ -20,7 +20,8 @@ import numpy as np
 from torch  import nn
 
 from utils.emd_ import emd_module
-from utils.cd.chamferdist import ChamferDistance as CD
+# from utils.cd.chamferdist import ChamferDistance as CD
+from chamferdist import ChamferDistance
 
 
 class FFD_multi_contrast(object):
@@ -36,7 +37,7 @@ class FFD_multi_contrast(object):
         self.mixrates= 0.5
         self.alpha = 0.5
         self.EMD = emd_module.emdModule()
-        self.cd = CD()
+        self.chamferDist = ChamferDistance()
 
 
     def pointmixup(self,align,mixrates,xyz1,xyz2):
@@ -107,7 +108,7 @@ class FFD_multi_contrast(object):
 
 
                     cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
-                    loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
+                    loss_chamfer = self.chamferDist(points1_ffd, points2_ffd, bidirectional=True)
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
