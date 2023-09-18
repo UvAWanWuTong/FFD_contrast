@@ -86,7 +86,7 @@ class FFD_learnable_contrast(object):
 
                 if self.args.regularization:
                     cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
-                    loss_chamfer = torch.mean(points1_ffd) + torch.mean(points1_ffd)
+                    loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
 
                 # calculate the chamfer distances
                 # dist = self.chamferDist(points1_ffd, points2_ffd)

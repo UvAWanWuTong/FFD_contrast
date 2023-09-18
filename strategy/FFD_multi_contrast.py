@@ -107,7 +107,7 @@ class FFD_multi_contrast(object):
 
 
                     cd0, cd1, _, _ = self.cd(points1_ffd, points1_ffd)
-                    loss_chamfer = torch.mean(points1_ffd) + torch.mean(points1_ffd)
+                    loss_chamfer = torch.mean(cd0) + torch.mean(cd1)
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
