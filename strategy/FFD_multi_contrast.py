@@ -20,7 +20,6 @@ import numpy as np
 from torch  import nn
 
 from utils.emd_ import emd_module
-# from utils.cd.chamferdist import ChamferDistance as CD
 from chamferdist import ChamferDistance
 
 

@@ -17,7 +17,6 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
-from utils.cd.chamferdist import ChamferDistance as CD
 
 from chamferdist import ChamferDistance
 
@@ -33,7 +32,6 @@ class FFD_learnable_contrast(object):
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
         self.chamferDist = ChamferDistance()
-        self.cd = CD()
 
 
 
