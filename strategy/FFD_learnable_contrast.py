@@ -18,7 +18,9 @@ import sys
 import torch
 from torch  import nn
 
-from chamferdist import ChamferDistance
+# from chamferdist import ChamferDistance
+from utils.emd_ import emd_module
+
 
 class FFD_learnable_contrast(object):
     def __init__(self,*args,**kwargs):
@@ -31,8 +33,8 @@ class FFD_learnable_contrast(object):
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
-        self.chamferDist = ChamferDistance()
-
+        # self.chamferDist = ChamferDistance()
+        self.EMD = emd_module.emdModule()
 
 
     def train(self,train_loader):
@@ -85,7 +87,10 @@ class FFD_learnable_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True)
+                    # loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True
+                    EMD,_ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
+                    loss_emd = torch.mean(EMD)
+
 
 
 
@@ -93,6 +98,7 @@ class FFD_learnable_contrast(object):
                 points1_ffd = points1_ffd.transpose(2, 1).to(self.args.device)
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
                 # get the feature after FFD
+
                 F1, _, _, = classifier(points1_ffd)
                 F2, _, _, = classifier(points2_ffd)
 
@@ -109,7 +115,7 @@ class FFD_learnable_contrast(object):
 
 
                 if self.args.regularization:
-                    loss -= loss_chamfer
+                    loss -= loss_emd
 
 
 
@@ -124,7 +130,7 @@ class FFD_learnable_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                    "chamfer loss":loss_chamfer.item(),
+                                    "emd loss":loss_emd.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 

@@ -20,7 +20,7 @@ import numpy as np
 from torch  import nn
 
 from utils.emd_ import emd_module
-from chamferdist import ChamferDistance
+# from chamferdist import ChamferDistance
 
 
 class FFD_multi_contrast(object):
@@ -39,11 +39,14 @@ class FFD_multi_contrast(object):
         self.chamferDist = ChamferDistance()
 
 
-    def pointmixup(self,align,mixrates,xyz1,xyz2):
+    def pointmixup(self,assignment=None,mixrates,xyz1,xyz2):
         # mix_rate = torch.tensor(mixrates).to(self.args.device).float()
         # mix_rate = mix_rate.unsqueeze_(1).unsqueeze_(2)
         # mix_rate_expand_xyz = mix_rate.expand(xyz1.shape).to(self.args.device)
-        _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
+        if not assassignmentignment:
+            _, ass = self.EMD(xyz1, xyz2, 0.005, 300)
+        else:
+            ass =assignment
         B = xyz1.shape[0]
         ass=ass.cpu().numpy()
         for i in range(B):
@@ -104,7 +107,9 @@ class FFD_multi_contrast(object):
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
                 if self.args.regularization:
-                    loss_chamfer = self.chamferDist(points1_ffd, points2_ffd, bidirectional=True)
+                    # loss_chamfer =  self.chamferDist(points1_ffd, points2_ffd,bidirectional=True
+                    EMD, _ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
+                    loss_emd = torch.mean(EMD)
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
@@ -173,7 +178,7 @@ class FFD_multi_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "chamfer loss":loss_chamfer.item(),
+                                   "emd loss":loss_emd.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
 
