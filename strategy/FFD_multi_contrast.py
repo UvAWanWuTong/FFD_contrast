@@ -146,10 +146,13 @@ class FFD_multi_contrast(object):
                 # NCE loss after deformed objects
 
                 if self.args.regularization:
+                    term_1 = criterion(F1, F3)
+                    term_2 = criterion(F2, F3)
+                    term_3 = criterion(F1, F2)
 
-                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2) - loss_chamfer
+                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3- loss_chamfer
                 else:
-                    loss = 0.1 * criterion(F1, F3) + 0.1 * criterion(F2, F3) + 0.8 * criterion(F1, F2)
+                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3
 
 
 
@@ -183,10 +186,11 @@ class FFD_multi_contrast(object):
                                    "chamfer loss":loss_chamfer.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
+                                   "loss 1-3":term_1.item(),
+                                   "loss 2-3": term_2.item(),
+                                  "loss 1-2": term_3.item(),
 
-
-
-                                   },
+                    },
                                   )
                 else:
                     self.writer.log({
