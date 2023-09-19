@@ -150,7 +150,7 @@ class FFD_multi_contrast(object):
                     term_2 = criterion(F2, F3)
                     term_3 = criterion(F1, F2)
 
-                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - loss_chamfer * 00.1
+                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - loss_chamfer * 0.01
                 else:
                     loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3
 
