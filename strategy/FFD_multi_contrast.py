@@ -109,7 +109,7 @@ class FFD_multi_contrast(object):
 
                 if self.args.regularization:
                     with torch.no_grad():
-                     loss_chamfer =  self.chamferDist(points1_ffd.cpu(), points2_ffd.cpu(),bidirectional=True).cuda()
+                     loss_chamfer =  self.chamferDist((p+dp_1).cpu(), (p+dp_2).cpu(),bidirectional=True).cuda()
                     # EMD, _ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
                     # loss_emd = torch.sum(EMD)
 
