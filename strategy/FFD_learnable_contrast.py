@@ -115,7 +115,7 @@ class FFD_learnable_contrast(object):
 
 
                 if self.args.regularization:
-                    loss -= loss_chamfer
+                    loss -= loss_chamfer * 0.01
 
 
 
