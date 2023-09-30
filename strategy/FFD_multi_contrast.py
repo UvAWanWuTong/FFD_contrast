@@ -41,7 +41,7 @@ class FFD_multi_contrast(object):
         self.EMD = emd_module.emdModule()
 
 
-    def regularization_selector(self,loss_type=None,point1=None,point2=None,classfier=None,criterion=None):
+    def regularization_selector(self,loss_type=None,point1=None,point2=None,classifier=None,criterion=None):
             if loss_type == 'none':
                 return 0
             if loss_type == 'chamfer':
@@ -55,8 +55,8 @@ class FFD_multi_contrast(object):
 
                 point1 = point1.transpose(2, 1).to(self.args.device)
                 point2 = point2.transpose(2, 1).to(self.args.device)
-                dp_1_feat, _, _, = classfier(point1)
-                dp_2_feat, _, _, = classfier(point2)
+                dp_1_feat, _, _, = classifier(point1)
+                dp_2_feat, _, _, = classifier(point2)
                 return criterion(dp_1_feat, dp_2_feat) * 0.01
 
 
