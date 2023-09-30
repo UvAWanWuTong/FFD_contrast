@@ -54,9 +54,10 @@ parser.add_argument(
 parser.add_argument(
     '--task_type', type=str, default='learnable',help='type of ffd deformation, avaliable choices: random,mix,multi'
 )
-
 parser.add_argument(
-    '--regularization', default=False, action='store_true',help='use of regulariztion term during the learnable FFD')
+    '--regularization', type=str ,default='double', help='use of regulariztion term, avaliable choices: double,chamfer,emd,none')
+
+
 
 parser.add_argument(
     '--dfnet', type=str, default='random', help='the architecture of deform net choose :3,2,1'
@@ -70,9 +71,9 @@ def main():
 
     opt = parser.parse_args()
     opt.ffd_points = pow(opt.ffd_points_axis,3)
-    if opt.regularization:
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_chamfer_2".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize)
+    if opt.regularization != 'none':
+        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{reg}".\
+            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,reg=opt.regularization)
     else:
         opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}".\
             format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize)
@@ -198,7 +199,6 @@ def main():
 
     elif opt.task_type == "random":
         ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt)
-
 
     elif opt.task_type == "mix":
         ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list)

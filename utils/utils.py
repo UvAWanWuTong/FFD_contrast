@@ -155,3 +155,7 @@ def chamfer_distance(cd,xyz1,xyz2):
 def np_to_tensor(x):
 
     return torch.from_numpy(x.astype(np.float32))
+
+
+
+

@@ -38,6 +38,20 @@ class FFD_learnable_contrast(object):
         # self.EMD = emd_module.emdModule()
 
 
+    def regularization_selector(self,loss_type=None,point1=None,point2=None,classfier=None,criterion=None):
+            if loss_type == 'none':
+                return 0
+            if loss_type == 'chamfer':
+                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
+
+            if loss_type == 'emd':
+                return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
+
+            if self.args.regularization == 'double':
+                dp_1_feat, _, _, = classfier(point1)
+                dp_2_feat, _, _, = classfier(point2)
+                return criterion(dp_1_feat, dp_2_feat) * 0.01
+
     def train(self,train_loader):
         for epoch in tqdm(range(self.args.nepoch)):
             """ contrastive learning """
@@ -87,11 +101,7 @@ class FFD_learnable_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
-                if self.args.regularization:
-                    with torch.no_grad():
-                        loss_chamfer = self.chamferDist((p+dp_1).cpu(), (p+dp_2).cpu(), bidirectional=True).cuda()
-
-
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
 
 
 
@@ -103,6 +113,7 @@ class FFD_learnable_contrast(object):
                 F2, _, _, = classifier(points2_ffd)
 
 
+
                 # get the feature ofd the control points
 
                 dp_1 = dp_1.transpose(2, 1).to(self.args.device)
@@ -111,11 +122,8 @@ class FFD_learnable_contrast(object):
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
                 # NCE loss after deformed objects
-                loss = criterion(F1, F2)
+                loss = criterion(F1, F2) - reg_loss
 
-
-                if self.args.regularization:
-                    loss -= loss_chamfer * 0.01
 
 
 
@@ -126,18 +134,15 @@ class FFD_learnable_contrast(object):
                 self.optimizer.step()
                 self.scheduler.step()
 
-
-                if self.args.regularization:
+                if self.args.regularization != 'none':
                     self.writer.log({
-                                   "train loss": loss.item(),
-                                    "chamfer loss":loss_chamfer.item(),
-                                   "Train epoch": epoch,
-                                   "Learning rate":self.scheduler.get_last_lr()[0],
+                        "train loss": loss.item(),
+                        "reg loss": reg_loss.item(),
+                        "Train epoch": epoch,
+                        "Learning rate": self.scheduler.get_last_lr()[0],
 
-
-
-                                   },
-                                  )
+                    },
+                    )
                 else:
                     self.writer.log({
                         "train loss": loss.item(),
@@ -146,8 +151,6 @@ class FFD_learnable_contrast(object):
 
                     },
                     )
-
-
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
                 # counter +=1

@@ -41,7 +41,19 @@ class FFD_multi_contrast(object):
         self.EMD = emd_module.emdModule()
 
 
+    def regularization_selector(self,loss_type=None,point1=None,point2=None,classfier=None,criterion=None):
+            if loss_type == 'none':
+                return 0
+            if loss_type == 'chamfer':
+                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
 
+            if loss_type == 'emd':
+                return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
+
+            if self.args.regularization == 'double':
+                dp_1_feat, _, _, = classfier(point1)
+                dp_2_feat, _, _, = classfier(point2)
+                return criterion(dp_1_feat, dp_2_feat) * 0.01
 
     def pointmixup(self,mixrates,xyz1,xyz2):
         # mix_rate = torch.tensor(mixrates).to(self.args.device).float()
@@ -67,10 +79,6 @@ class FFD_multi_contrast(object):
                 (b,p) = data
                 b = b.to(self.args.device)
                 p = p.to(self.args.device)
-
-
-
-
 
                 # perfom FFD deformation
 
@@ -107,11 +115,9 @@ class FFD_multi_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
-                if self.args.regularization:
-                    with torch.no_grad():
-                     loss_chamfer =  self.chamferDist((p+dp_1).cpu(), (p+dp_2).cpu(),bidirectional=True).cuda()
-                    # EMD, _ = self.EMD(points1_ffd, points2_ffd, 0.005, 300)
-                    # loss_emd = torch.sum(EMD)
+
+
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
@@ -145,14 +151,11 @@ class FFD_multi_contrast(object):
 
                 # NCE loss after deformed objects
 
-                if self.args.regularization:
-                    term_1 = criterion(F1, F3)
-                    term_2 = criterion(F2, F3)
-                    term_3 = criterion(F1, F2)
+                term_1 = criterion(F1, F3)
+                term_2 = criterion(F2, F3)
+                term_3 = criterion(F1, F2)
 
-                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - loss_chamfer * 0.01
-                else:
-                    loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3
+                loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - reg_loss
 
 
 
@@ -183,12 +186,12 @@ class FFD_multi_contrast(object):
                 if self.args.regularization:
                     self.writer.log({
                                    "train loss": loss.item(),
-                                   "chamfer loss":loss_chamfer.item(),
+                                   "chamfer loss":reg_loss.item(),
                                    "Train epoch": epoch,
                                    "Learning rate":self.scheduler.get_last_lr()[0],
                                    "loss 1-3":term_1.item(),
                                    "loss 2-3": term_2.item(),
-                                  "loss 1-2": term_3.item(),
+                                   "loss 1-2": term_3.item(),
 
                     },
                                   )
