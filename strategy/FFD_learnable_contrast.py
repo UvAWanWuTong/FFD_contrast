@@ -48,6 +48,10 @@ class FFD_learnable_contrast(object):
                 return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
 
             if self.args.regularization == 'double':
+                # get the feature ofd the control points
+
+                point1 = point1.transpose(2, 1).to(self.args.device)
+                point2 = point2.transpose(2, 1).to(self.args.device)
                 dp_1_feat, _, _, = classfier(point1)
                 dp_2_feat, _, _, = classfier(point2)
                 return criterion(dp_1_feat, dp_2_feat) * 0.01
@@ -101,7 +105,6 @@ class FFD_learnable_contrast(object):
                 points1_ffd = normalize_pointcloud_tensor(points1_ffd)
                 points2_ffd = normalize_pointcloud_tensor(points2_ffd)
 
-                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
 
 
 
@@ -114,14 +117,12 @@ class FFD_learnable_contrast(object):
 
 
 
-                # get the feature ofd the control points
 
-                dp_1 = dp_1.transpose(2, 1).to(self.args.device)
-                dp_2 = dp_2.transpose(2, 1).to(self.args.device)
 
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
                 # NCE loss after deformed objects
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
                 loss = criterion(F1, F2) - reg_loss
 
 

@@ -51,9 +51,14 @@ class FFD_multi_contrast(object):
                 return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
 
             if self.args.regularization == 'double':
+                # get the feature ofd the control points
+
+                point1 = point1.transpose(2, 1).to(self.args.device)
+                point2 = point2.transpose(2, 1).to(self.args.device)
                 dp_1_feat, _, _, = classfier(point1)
                 dp_2_feat, _, _, = classfier(point2)
                 return criterion(dp_1_feat, dp_2_feat) * 0.01
+
 
     def pointmixup(self,mixrates,xyz1,xyz2):
         # mix_rate = torch.tensor(mixrates).to(self.args.device).float()
@@ -117,7 +122,8 @@ class FFD_multi_contrast(object):
 
 
 
-                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
+
+
 
                 # B = points2_ffd.shape[0]
                 # mixrates = (0.5 - np.abs(np.random.beta(0.5, 0.5, B) - 0.5))
@@ -142,10 +148,7 @@ class FFD_multi_contrast(object):
                 F2, _, _, = classifier(points2_ffd)
                 F3, _, _, = classifier(points3)
 
-                # get the feature ofd the control points
 
-                dp_1 = dp_1.transpose(2, 1).to(self.args.device)
-                dp_2 = dp_2.transpose(2, 1).to(self.args.device)
 
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
@@ -155,6 +158,7 @@ class FFD_multi_contrast(object):
                 term_2 = criterion(F2, F3)
                 term_3 = criterion(F1, F2)
 
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
                 loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - reg_loss
 
 

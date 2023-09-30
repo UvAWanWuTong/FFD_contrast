@@ -31,6 +31,26 @@ class FFD_random_contrast(object):
         self.min_loss = 1000
 
 
+    def regularization_selector(self,loss_type=None,point1=None,point2=None,classfier=None,criterion=None):
+            if loss_type == 'none':
+                return 0
+            if loss_type == 'chamfer':
+                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
+
+            if loss_type == 'emd':
+                return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
+
+            if self.args.regularization == 'double':
+                # get the feature ofd the control points
+
+                point1 = point1.transpose(2, 1).to(self.args.device)
+                point2 = point2.transpose(2, 1).to(self.args.device)
+                dp_1_feat, _, _, = classfier(point1)
+                dp_2_feat, _, _, = classfier(point2)
+                return criterion(dp_1_feat, dp_2_feat) * 0.01
+
+
+
     def train(self,train_loader):
         for epoch in tqdm(range(self.args.nepoch)):
             """ contrastive learning """
@@ -78,13 +98,14 @@ class FFD_random_contrast(object):
 
                 # get the feature ofd the control points
 
-                dp_1 = dp_1.transpose(2, 1).to(self.args.device)
-                dp_2 = dp_2.transpose(2, 1).to(self.args.device)
 
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
                 # NCE loss after deformed objects
-                loss = criterion(F1, F2)
+
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
+
+                loss = criterion(F1, F2) - reg_loss
 
                 # NCE loss afte deformed control points
 
