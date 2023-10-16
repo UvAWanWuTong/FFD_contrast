@@ -17,6 +17,7 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch  import nn
+from chamferdist import ChamferDistance
 
 
 
@@ -31,7 +32,7 @@ class FFD_mix_contrast(object):
         self.min_loss = 1000
         self.model_list =  kwargs['model_list']
         # self.regularization =  kwargs['regularization']
-        # self.chamferDist = ChamferDistance()
+        self.chamferDist = ChamferDistance()
 
     def regularization_selector(self,loss_type=None,point1=None,point2=None,classifier=None,criterion=None):
             if loss_type == 'none':

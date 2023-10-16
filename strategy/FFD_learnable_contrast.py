@@ -42,7 +42,7 @@ class FFD_learnable_contrast(object):
             if loss_type == 'none':
                 return 0
             if loss_type == 'chamfer':
-                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
+                return  0.5 * self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
 
             if loss_type == 'emd':
                 return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
