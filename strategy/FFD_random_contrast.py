@@ -18,36 +18,13 @@ import sys
 import torch
 from torch  import nn
 # from chamferdist import ChamferDistance
+from utils.emd_ import emd_module
 
+from strategy.FFD_contrast import FFD_contrast
 
-class FFD_random_contrast(object):
+class FFD_random_contrast(FFD_contrast):
     def __init__(self,*args,**kwargs):
-        self.args = kwargs['args']
-        self.model = kwargs['model'].to(self.args.device)
-        self.optimizer = kwargs['optimizer']
-        self.scheduler = kwargs['scheduler']
-        self.writer = kwargs['writer']
-        self.num_batch =  kwargs['num_batch']
-        self.min_loss = 1000
-
-
-    def regularization_selector(self,loss_type=None,point1=None,point2=None,classfier=None,criterion=None):
-            if loss_type == 'none':
-                return 0
-            if loss_type == 'chamfer':
-                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
-
-            if loss_type == 'emd':
-                return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
-
-            if self.args.regularization == 'double':
-                # get the feature ofd the control points
-
-                point1 = point1.transpose(2, 1).to(self.args.device)
-                point2 = point2.transpose(2, 1).to(self.args.device)
-                dp_1_feat, _, _, = classfier(point1)
-                dp_2_feat, _, _, = classfier(point2)
-                return criterion(dp_1_feat, dp_2_feat) * 0.01
+        super(FFD_random_contrast, self).__init__(*args,**kwargs)
 
 
 

@@ -17,6 +17,25 @@ from tqdm.auto import tqdm
 import sys
 import torch
 import numpy as np
+from torch import nn
+import os
+from utils.utils import save_config_file,save_checkpoint
+from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
+from utils.criterion import  NCESoftmaxLoss
+import logging
+from tqdm.auto import tqdm
+
+import sys
+import torch
+import os
+from utils.utils import save_config_file,save_checkpoint,normalize_pointcloud_tensor
+from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
+from utils.criterion import  NCESoftmaxLoss
+import logging
+from tqdm.auto import tqdm
+import sys
+import torch
+import numpy as np
 from torch  import nn
 
 from utils.emd_ import emd_module
@@ -24,40 +43,24 @@ from chamferdist import ChamferDistance
 
 torch.autograd.set_detect_anomaly(True)
 
+from strategy.FFD_contrast import FFD_contrast
 
-class FFD_multi_contrast(object):
+class FFD_multi_contrast(FFD_contrast):
     def __init__(self,*args,**kwargs):
-        self.args = kwargs['args']
-        self.model = kwargs['model'].to(self.args.device)
-        self.optimizer = kwargs['optimizer']
-        self.scheduler = kwargs['scheduler']
-        self.writer = kwargs['writer']
-        self.num_batch =  kwargs['num_batch']
-        self.min_loss = 1000
-        self.model_list =  kwargs['model_list']
-        self.mixrates= 0.5
-        self.alpha = 0.5
-        self.chamferDist = ChamferDistance()
-        self.EMD = emd_module.emdModule()
+        super(FFD_multi_contrast, self).__init__(*args,**kwargs)
+        # self.args = kwargs['args']
+        # self.model = kwargs['model'].to(self.args.device)
+        # self.optimizer = kwargs['optimizer']
+        # self.scheduler = kwargs['scheduler']
+        # self.writer = kwargs['writer']
+        # self.num_batch =  kwargs['num_batch']
+        # self.min_loss = 1000
+        # self.model_list =  kwargs['model_list']
+        # self.mixrates= 0.5
+        # self.alpha = 0.5
+        # self.chamferDist = ChamferDistance()
+        # self.EMD = emd_module.emdModule()
 
-
-    def regularization_selector(self,loss_type=None,point1=None,point2=None,classifier=None,criterion=None):
-            if loss_type == 'none':
-                return 0
-            if loss_type == 'chamfer':
-                return  self.chamferDist(point1.cpu(), point2.cpu(), bidirectional=True).cuda() * 0.01
-
-            if loss_type == 'emd':
-                return torch.sum(self.EMD(point1, point2, 0.005, 300)[0])
-
-            if self.args.regularization == 'double':
-                # get the feature ofd the control points
-
-                point1 = point1.transpose(2, 1).to(self.args.device)
-                point2 = point2.transpose(2, 1).to(self.args.device)
-                dp_1_feat, _, _, = classifier(point1)
-                dp_2_feat, _, _, = classifier(point2)
-                return criterion(dp_1_feat, dp_2_feat) * 0.01
 
 
     def pointmixup(self,mixrates,xyz1,xyz2):
@@ -158,7 +161,7 @@ class FFD_multi_contrast(object):
                 term_2 = criterion(F2, F3)
                 term_3 = criterion(F1, F2)
 
-                reg_loss = self.regularization_selector(loss_type=self.args.regularization,point1=(p+dp_1),point2=(p+dp_2),classifier=classifier,criterion=criterion)
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,control_points=((p+dp_1),(p+dp_2)),point_cloud=(points1_ffd,points2_ffd),classifier=classifier,criterion=criterion)
                 loss = 0.1 * term_1 + 0.1 * term_2 + 0.8 * term_3 - reg_loss
 
 
@@ -248,6 +251,8 @@ class FFD_multi_contrast(object):
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path,save_deform=True)
                 self.min_loss = loss
+
+
 
 
 
