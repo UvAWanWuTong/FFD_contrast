@@ -5,7 +5,7 @@ import random
 import torch.optim as optim
 import torch.utils.data
 from model.pointnet.dataset import Contrastive_ModelNetDataset
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net,Deform_Net_2
+from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net_1layer,Deform_Net_2layer,Deform_Net_3layer
 from utils.criterion import  NCESoftmaxLoss
 from strategy.FFD_contrast import FFD_contrast
 from strategy.FFD_learnable_contrast import FFD_learnable_contrast
@@ -55,25 +55,23 @@ parser.add_argument(
     '--task_type', type=str, default='learnable',help='type of ffd deformation, avaliable choices: random,mix,multi'
 )
 parser.add_argument(
-    '--regularization', type=str ,default='double', help='use of regulariztion term, avaliable choices: double,chamfer,emd,none')
-
-
+    '--regularization', type=str ,default='double', help='use of regulariztion term, avaliable choices: double,chamfer,emd,none'
+)
 
 parser.add_argument(
-    '--dfnet', type=str, default='random', help='the architecture of deform net choose :3,2,1'
-
+    "--structure", type=str,default="1layer" ,choices=["1layer", "2layer", "3layer"],help='Choose of the structure of DeformNet'
 )
 
 
 def main():
 
-    #
+
 
     opt = parser.parse_args()
     opt.ffd_points = pow(opt.ffd_points_axis,3)
     if opt.regularization != 'none':
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{reg}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,reg=opt.regularization)
+        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{reg}".\
+            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization)
     else:
         opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}".\
             format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize)
@@ -133,6 +131,12 @@ def main():
     model_list = None
     model = Contrastive_PointNet(feature_transform=opt.feature_transform)
 
+    deform_net_map = {
+        "1layer": Deform_Net_1layer,
+        "2layer": Deform_Net_2layer,
+        "3layer": Deform_Net_3layer
+    }
+
 
     # try:
     #     opt.task_type not in ['leanable','random']
@@ -140,8 +144,9 @@ def main():
     #      print('No avaliable task type ')
 
     if opt.task_type != 'random':
-        deform_net1 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  Deform_Net(in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+
+        deform_net1 =  deform_net_map[opt.structure](in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  deform_net_map[opt.structure](in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},

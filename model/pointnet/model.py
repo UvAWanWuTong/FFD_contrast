@@ -9,10 +9,10 @@ import torch.nn.functional as F
 
 
 
-class Deform_Net(nn.Module):
+class Deform_Net_1layer(nn.Module):
     def __init__(self, in_features, out_features):
 
-        super(Deform_Net, self).__init__()
+        super(Deform_Net_1layer, self).__init__()
         self.fc = nn.Linear(in_features, out_features)
 
 
@@ -23,18 +23,35 @@ class Deform_Net(nn.Module):
 
 
 
-class Deform_Net_2(nn.Module):
+class Deform_Net_2layer(nn.Module):
     def __init__(self, in_features, out_features):
 
-        super(Deform_Net_2, self).__init__()
-        self.fc1 = nn.Linear(in_features, 128)
+        super(Deform_Net_2layer, self).__init__()
+        self.fc1 = nn.Linear(in_features,128)
         self.fc2 = nn.Linear(128,out_features)
-
-        self.bn1 = nn.BatchNorm1d()
+        self.bn1 = nn.BatchNorm1d(in_features)
 
     def forward(self,x):
         dp = F.relu(self.bn1(self.fc1(x)))
-        dp = self.fc2(dp)
+        dp = F.relu(self.fc2(dp))
+        dp = torch.reshape(dp,(x.shape[0],-1,3))
+        return dp
+
+class Deform_Net_3layer(nn.Module):
+    def __init__(self, in_features, out_features):
+
+        super(Deform_Net_3layer, self).__init__()
+        self.fc1 = nn.Linear(in_features,128)
+        self.fc2 = nn.Linear(128,128)
+        self.fc3 = nn.Linear(128,out_features)
+        self.bn1 = nn.BatchNorm1d(in_features)
+        self.bn2 = nn.BatchNorm1d(128)
+
+
+    def forward(self,x):
+        dp = F.relu(self.bn1(self.fc1(x)))
+        dp = F.relu(self.bn2(self.fc2(dp)))
+        dp = self.fc3(dp)
         dp = torch.reshape(dp,(x.shape[0],-1,3))
         return dp
 

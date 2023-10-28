@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 from utils.utils import save_config_file,save_checkpoint
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
@@ -10,7 +9,6 @@ import sys
 import torch
 import os
 from utils.utils import save_config_file,save_checkpoint,normalize_pointcloud_tensor
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
@@ -20,7 +18,6 @@ import numpy as np
 from torch import nn
 import os
 from utils.utils import save_config_file,save_checkpoint
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
@@ -29,7 +26,6 @@ import sys
 import torch
 import os
 from utils.utils import save_config_file,save_checkpoint,normalize_pointcloud_tensor
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net
 from utils.criterion import  NCESoftmaxLoss
 import logging
 from tqdm.auto import tqdm
