@@ -187,8 +187,11 @@ def main():
                            "ffd_control" : opt.ffd_control,
                            "lr" : opt.lr,
                            "step_size" : opt.step_size,
-                           "decay" : opt.decay
-    }
+                           "decay" : opt.decay,
+                           "deformnet_architecture": opt.structure,
+                           "task_type":opt.task_type,
+
+                       }
                        )
 
 
