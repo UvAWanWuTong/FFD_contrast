@@ -85,7 +85,7 @@ def main():
             format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size,non_linear=opt.non_non_linear)
     else:
         opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_non_linear)
+            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_linear)
 
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
@@ -140,7 +140,7 @@ def main():
 
 
     model_list = None
-    model = Contrastive_PointNet(feature_transform=opt.feature_transform)
+    model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear)
 
     deform_net_map = {
         "1layer": Deform_Net_1layer,
