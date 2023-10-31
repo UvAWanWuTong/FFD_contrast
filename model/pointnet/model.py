@@ -177,21 +177,21 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 class Contrastive_PointNet(nn.Module):
-    def __init__(self, feature_transform=False, feature_ize = 128) :
+    def __init__(self, feature_transform=False, feature_ize = 128, non_linear =False) :
         super(Contrastive_PointNet, self).__init__()
-
+        self.non_linear = non_linear
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
-        # # self.fc1 = nn.Linear(1024, 1024)
-        # # self.relu = nn.ReLU()
-        # self.fc2 = nn.Linear(1024, 128)
+        # linear projection head
         self.fc1 = nn.Linear(1024, feature_ize)
-
-
+        # non linear projection head
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
         x = self.fc1(x)
+        if self.non_linear:
+            x = self.relu(x)
         feature =  F.log_softmax(x, dim=1)
         return feature, trans, trans_feat
 

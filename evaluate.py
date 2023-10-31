@@ -1,9 +1,8 @@
+from __future__ import print_function
 import wandb
 import argparse
 import os
 import random
-import torch
-import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 from model.pointnet.dataset import ModelNetDataset
@@ -12,7 +11,6 @@ import torch.nn.functional as F
 from tqdm import tqdm
 import re
 import torch.backends.cudnn as cudnn
-from utils.sampler import Normalize
 from utils.utils import  save_checkpoint
 
 parser = argparse.ArgumentParser()

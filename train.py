@@ -62,19 +62,30 @@ parser.add_argument(
     "--structure", type=str,default="1layer" ,choices=["1layer", "2layer", "3layer"],help='Choose of the structure of DeformNet'
 )
 
+parser.add_argument(
+    '--feature_size', type=int, default=128, help='the feature size of encoder output'
+)
+
+parser.add_argument(
+    '--non_linear', default=False,action='store_true',  help='non linear projection head'
+)
+
+
+
+
 
 def main():
 
 
 
-    opt = parser.parse_args()
+    opt = parser.parse_args() 
     opt.ffd_points = pow(opt.ffd_points_axis,3)
     if opt.regularization != 'none':
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{reg}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization)
+        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}_{reg}".\
+            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size,non_linear=opt.non_non_linear)
     else:
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize)
+        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}".\
+            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_non_linear)
 
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
@@ -190,7 +201,6 @@ def main():
                            "decay" : opt.decay,
                            "deformnet_architecture": opt.structure,
                            "task_type":opt.task_type,
-
                        }
                        )
 
