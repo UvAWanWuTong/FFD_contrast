@@ -94,7 +94,7 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='chec
     if is_best:
 
         shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
-        # conver other checkpoints
+        # cover other checkpoints
         clean_dir(save_checkpoint_dir)
 
     if save_deform:

@@ -140,7 +140,7 @@ def main():
 
 
     model_list = None
-    model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear)
+    model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear,feature_size=opt.feature_size)
 
     deform_net_map = {
         "1layer": Deform_Net_1layer,
@@ -156,8 +156,8 @@ def main():
 
     if opt.task_type != 'random':
 
-        deform_net1 =  deform_net_map[opt.structure](in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  deform_net_map[opt.structure](in_features=128,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net1 =  deform_net_map[opt.structure](in_features=opt.feature_size,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  deform_net_map[opt.structure](in_features=opt.feature_size,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},
