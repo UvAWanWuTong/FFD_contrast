@@ -133,9 +133,9 @@ class FFD_learnable_contrast(FFD_contrast):
                     )
 
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % ( epoch, counter, self.num_batch, loss.item(),self.scheduler.get_last_lr()[0]))
-                # counter +=1
-                # if counter > 5:
-                #     break
+                counter +=1
+                if counter > 5:
+                    break
             if epoch % 5 ==0:
                 # save the best model checkpoints
                 if epoch_loss / self.num_batch < self.min_loss:

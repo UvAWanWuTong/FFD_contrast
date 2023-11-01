@@ -29,7 +29,7 @@ class Deform_Net_2layer(nn.Module):
         super(Deform_Net_2layer, self).__init__()
         self.fc1 = nn.Linear(in_features,128)
         self.fc2 = nn.Linear(128,out_features)
-        self.bn1 = nn.BatchNorm1d(in_features)
+        self.bn1 = nn.BatchNorm1d(128)
 
     def forward(self,x):
         dp = F.relu(self.bn1(self.fc1(x)))
@@ -44,7 +44,7 @@ class Deform_Net_3layer(nn.Module):
         self.fc1 = nn.Linear(in_features,128)
         self.fc2 = nn.Linear(128,128)
         self.fc3 = nn.Linear(128,out_features)
-        self.bn1 = nn.BatchNorm1d(in_features)
+        self.bn1 = nn.BatchNorm1d(128)
         self.bn2 = nn.BatchNorm1d(128)
 
 
@@ -177,13 +177,13 @@ class PointNetfeat(nn.Module):
             return torch.cat([x, pointfeat], 1), trans, trans_feat
 
 class Contrastive_PointNet(nn.Module):
-    def __init__(self, feature_transform=False, feature_ize = 128, non_linear =False) :
+    def __init__(self, feature_transform=False, feature_size = 128, non_linear =False) :
         super(Contrastive_PointNet, self).__init__()
         self.non_linear = non_linear
         self.feature_transform = feature_transform
         self.feat = PointNetfeat(global_feat=True, feature_transform=feature_transform)
         # linear projection head
-        self.fc1 = nn.Linear(1024, feature_ize)
+        self.fc1 = nn.Linear(1024, feature_size)
         # non linear projection head
         self.relu = nn.ReLU()
 

@@ -123,8 +123,8 @@ classifier = PointNetCls(k=num_classes, feature_transform=opt.feature_transform)
 
 
 assert opt.model != '', "The model parameter should not be empty"
-
-classifier.load_state_dict(torch.load(opt.model)['state_dict'],strict=False)
+dict  = torch.load(opt.model)['state_dict']
+classifier.load_state_dict(torch.load(opt.model)['state_dict'],strict=True)
 print('restore model successfully')
 
 parameters_ = []
@@ -132,12 +132,13 @@ parameters_ = []
 
 # find last few fc layers and frozen the rest of feature extraction layers
 for name, param in classifier.named_parameters():
-    if not re.match(r'^fc\d+\.(weight|bias)$',name):
-                param.requires_grad = False
-                parameters_.append(name)
+    # if not re.match(r'^fc\d+\.(weight|bias)$',name):
+    if not re.match(r'^(fc|bn)\d+\.(weight|bias)$',name):
+        param.requires_grad = False
+        parameters_.append(name)
 
 parameters = list(filter(lambda p: p.requires_grad, classifier.parameters()))
-assert len(parameters) == 6  # fc{1,2,3}.weight, fc{1,2,3}.bias
+assert len(parameters) == 9  # fc{1,2,3}.weight, fc{1,2,3}.bias
 
 
 optimizer = optim.Adam(classifier.parameters(), lr=opt.lr, betas=(0.9, 0.999))
@@ -213,9 +214,8 @@ for epoch in range(opt.nepoch):
 
     for i, data in enumerate(dataloader, 0):
         # train
-        if opt.test:
-            if counter >5:
-                break
+        # if counter >5:
+        #     break
         points, target = data
         target = target[:, 0].to()
         points = points.transpose(2, 1)
@@ -237,7 +237,7 @@ for epoch in range(opt.nepoch):
         wandb.log({"train acc": correct.item() / float(opt.batchSize), "train loss": loss.item(),
                    "Train epoch": epoch,"learning rate":scheduler.get_last_lr()[0]})
         print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
-        counter +=1
+        # counter +=1
         if i % 10 == 0:
             #evaluate
             val_loss,val_acc = evaluation(model=classifier)

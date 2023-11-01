@@ -70,13 +70,40 @@ def clean_dir(directory):
         os.makedirs(directory)
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints',save_deform=None):
+# def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints',save_deform=None):
+#
+#
+#     save_checkpoint_dir = os.path.join(file_dir,'checkpoints')
+#     save_best_dir = os.path.join(file_dir,'best')
+#     save_deform_net_dir = os.path.join(file_dir,'deform')
+#
+#
+#     if not os.path.exists(save_checkpoint_dir):
+#         os.makedirs(save_checkpoint_dir)
+#
+#     if not os.path.exists(save_best_dir):
+#         os.makedirs(save_best_dir)
+#
+#
+#     if not os.path.exists(save_deform_net_dir):
+#         os.makedirs(save_deform_net_dir)
+#
+#     torch.save(state, os.path.join(save_checkpoint_dir,filename))
+#
+#
+#     if is_best:
+#
+#         shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
+#         # cover other checkpoints
+#         # clean_dir(save_checkpoint_dir)
+#
+#     if save_deform:
+#         torch.save(state, os.path.join(save_deform_net_dir, filename))
 
-
-    save_checkpoint_dir = os.path.join(file_dir,'checkpoints')
-    save_best_dir = os.path.join(file_dir,'best')
-    save_deform_net_dir = os.path.join(file_dir,'deform')
-
+def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', file_dir='checkpoints', save_deform=None):
+    save_checkpoint_dir = os.path.join(file_dir, 'checkpoints')
+    save_best_dir = os.path.join(file_dir, 'best')
+    save_deform_net_dir = os.path.join(file_dir, 'deform')
 
     if not os.path.exists(save_checkpoint_dir):
         os.makedirs(save_checkpoint_dir)
@@ -84,21 +111,24 @@ def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='chec
     if not os.path.exists(save_best_dir):
         os.makedirs(save_best_dir)
 
-
     if not os.path.exists(save_deform_net_dir):
         os.makedirs(save_deform_net_dir)
 
-    torch.save(state, os.path.join(save_checkpoint_dir,filename))
-
-
-    if is_best:
-
-        shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
-        # cover other checkpoints
-        clean_dir(save_checkpoint_dir)
-
+    # Optionally save the deformnet checkpoint
     if save_deform:
-        torch.save(state, os.path.join(save_deform_net_dir, filename))
+        deform_filename = filename  # You can modify this if needed
+        torch.save(state, os.path.join(save_deform_net_dir, deform_filename))
+        return
+
+    # Save the main model checkpoint
+    torch.save(state, os.path.join(save_checkpoint_dir, filename))
+
+    # Check if it's the best model
+    if is_best:
+        torch.save(state, os.path.join(save_best_dir, 'best_model.pth.tar'))
+
+
+
 
 
 def save_config_file(model_checkpoints_folder, args):
