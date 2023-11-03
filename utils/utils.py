@@ -12,28 +12,6 @@ def clean_dir(directory):
         os.makedirs(directory)
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints'):
-
-
-    save_checkpoint_dir = os.path.join(file_dir,'checkpoints')
-    save_best_dir = os.path.join(file_dir,'best')
-
-
-    if not os.path.exists(save_checkpoint_dir):
-        os.makedirs(save_checkpoint_dir)
-
-    if not os.path.exists(save_best_dir):
-        os.makedirs(save_best_dir)
-
-    torch.save(state, os.path.join(save_checkpoint_dir,filename))
-
-
-    if is_best:
-
-        shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
-        # conver other checkpoints
-        clean_dir(save_checkpoint_dir)
-
 
 def save_config_file(model_checkpoints_folder, args):
     if not os.path.exists(model_checkpoints_folder):
@@ -70,35 +48,6 @@ def clean_dir(directory):
         os.makedirs(directory)
 
 
-# def save_checkpoint(state, is_best, filename='checkpoint.pth.tar',file_dir='checkpoints',save_deform=None):
-#
-#
-#     save_checkpoint_dir = os.path.join(file_dir,'checkpoints')
-#     save_best_dir = os.path.join(file_dir,'best')
-#     save_deform_net_dir = os.path.join(file_dir,'deform')
-#
-#
-#     if not os.path.exists(save_checkpoint_dir):
-#         os.makedirs(save_checkpoint_dir)
-#
-#     if not os.path.exists(save_best_dir):
-#         os.makedirs(save_best_dir)
-#
-#
-#     if not os.path.exists(save_deform_net_dir):
-#         os.makedirs(save_deform_net_dir)
-#
-#     torch.save(state, os.path.join(save_checkpoint_dir,filename))
-#
-#
-#     if is_best:
-#
-#         shutil.copyfile(os.path.join(save_checkpoint_dir,filename),os.path.join(save_best_dir,'best_model.pth.tar'))
-#         # cover other checkpoints
-#         # clean_dir(save_checkpoint_dir)
-#
-#     if save_deform:
-#         torch.save(state, os.path.join(save_deform_net_dir, filename))
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar', file_dir='checkpoints', save_deform=None):
     save_checkpoint_dir = os.path.join(file_dir, 'checkpoints')
