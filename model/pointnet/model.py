@@ -226,8 +226,6 @@ class PointNetCls(nn.Module):
 
 
 
-
-
 def feature_transform_regularizer(trans):
     d = trans.size()[1]
     batchsize = trans.size()[0]
