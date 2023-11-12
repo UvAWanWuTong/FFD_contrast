@@ -104,18 +104,6 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-# def chamfer_distance(pointset1,pointset2):
-#
-#     source_cloud = torch.randn(1, 100, 3).cuda()
-#     target_cloud = torch.randn(1, 50, 3).cuda()
-#
-#
-#
-#     return source_cloud ,   target_cloud
-#
-#
-
-
 
 
 def np_to_tensor(x):

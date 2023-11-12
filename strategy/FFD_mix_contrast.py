@@ -98,7 +98,7 @@ class FFD_mix_contrast(FFD_contrast):
                 criterion = NCESoftmaxLoss(batch_size=self.args.batchSize, cur_device=self.args.device)
 
                 # NCE loss after deformed objects
-                reg_loss = self.regularization_selector(loss_type=self.args.regularization,control_points=((p+dp_1),(p+dp_2)),point_cloud=(points1_ffd,points2_ffd),classifier=classifier,criterion=criterion)
+                reg_loss = self.regularization_selector(loss_type=self.args.regularization,control_points=((p+dp_1),(p+dp_2)),point_cloud=(points1_ffd,points2_ffd),classifier=self.classifier,criterion=criterion)
                 loss = criterion(F1, F2) - reg_loss
 
 

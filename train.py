@@ -4,17 +4,17 @@ import os
 import random
 import torch.optim as optim
 import torch.utils.data
-from model.pointnet.dataset import Contrastive_ModelNetDataset
-from model.pointnet.model import Contrastive_PointNet, feature_transform_regularizer,Deform_Net_1layer,Deform_Net_2layer,Deform_Net_3layer
-from utils.criterion import  NCESoftmaxLoss
-from strategy.FFD_contrast import FFD_contrast
+
+from Data.dataset import Contrastive_ModelNetDataset,Contrastive_ShapeNet
+from model.pointnet.model import Contrastive_PointNet, Deform_Net_1layer,Deform_Net_2layer,Deform_Net_3layer
+from model.DGCNN.model import DGCNN
 from strategy.FFD_learnable_contrast import FFD_learnable_contrast
 from strategy.FFD_random_contrast import FFD_random_contrast
 from strategy.FFD_mix_contrast import FFD_mix_contrast
 from strategy.FFD_multi_contrast import FFD_multi_contrast
 import torch.backends.cudnn as cudnn
-
-
+import lightly
+from lightly.loss.ntx_ent_loss import NTXentLoss
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -28,11 +28,13 @@ parser.add_argument(
 parser.add_argument(
     '--outf', type=str, default='checkpoints_train', help='output folder')
 parser.add_argument(
-    '--model', type=str, default='', help='model path')
+    '--model', type=str, default='pointnet', help='backbone model')
+parser.add_argument(
+    '--checkpoint', type=str, default='', help='continue training form last checkpoints')
 parser.add_argument(
     '--dataset', type=str, required=True, help="dataset path")
 parser.add_argument(
-    '--dataset_type', type=str, default='modelnet40', help="modelnet40")
+    '--dataset_type', type=str, default='shapenet', help="modelnet40,shapenet")
 parser.add_argument(
     '--feature_transform',default= False, action='store_true', help="use feature transform")
 parser.add_argument(
@@ -81,11 +83,11 @@ def main():
     opt = parser.parse_args() 
     opt.ffd_points = pow(opt.ffd_points_axis,3)
     if opt.regularization != 'none':
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}_{reg}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size,non_linear=opt.non_linear)
+        opt.expriment_name = "{model}_{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}_{reg}".\
+            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size,non_linear=opt.non_linear)
     else:
         opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}".\
-            format(lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_linear)
+            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_linear)
 
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
@@ -122,7 +124,15 @@ def main():
 
 
     else:
-        exit('wrong dataset type')
+
+        dataset = Contrastive_ShapeNet(
+            root=opt.dataset,
+            npoints=opt.num_points,
+            split='train',
+            ffd_points_axis=opt.ffd_points_axis,
+            ffd_control=opt.ffd_control,
+        )
+
 
     train_dataloader = torch.utils.data.DataLoader(
             dataset,
@@ -140,7 +150,11 @@ def main():
 
 
     model_list = None
-    model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear,feature_size=opt.feature_size)
+    if opt.model=="pointnet":
+        model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear,feature_size=opt.feature_size)
+    elif opt.model=="dgcnn":
+        model = DGCNN(k=15)
+
 
     deform_net_map = {
         "1layer": Deform_Net_1layer,
@@ -175,14 +189,11 @@ def main():
 
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
-
-
-
-
+    criterion = NTXentLoss(temperature = 0.1).to(opt.device)
     num_batch = len(dataset) / opt.batchSize
 
-    if opt.model != '':
-        model.load_state_dict(torch.load(opt.model)['state_dict'])
+    if opt.checkpoint != '':
+        model.load_state_dict(torch.load(opt.checkpoint)['state_dict'])
         print('restore successful')
         print('current epoch:%d'% torch.load(opt.model)['current_epoch'])
 
@@ -193,7 +204,7 @@ def main():
                            "architecture":"pointnet-classification",
                            "batch_size":opt.batchSize,
                            "epochs": opt.nepoch,
-                           "dataset":'ModelNet40',
+                           "dataset":opt.dataset_type,
                            "ffd_points" : opt.ffd_points,
                            "ffd_control" : opt.ffd_control,
                            "lr" : opt.lr,
@@ -206,26 +217,27 @@ def main():
 
 
     print('Iinitialization of logger complete\n')
-
-
-
     print('current batch size',opt.batchSize)
 
 
     if opt.task_type == "learnable":
-         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list)
+         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list,criterion=criterion)
 
     elif opt.task_type == "random":
-        ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt)
+        ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt,criterion=criterion)
 
     elif opt.task_type == "mix":
-        ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list)
+        ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
     elif opt.task_type == "multi":
         ffd_contrast = FFD_multi_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb,
-                                              num_batch=num_batch, args=opt, model_list=model_list)
+                                              num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
-    ffd_contrast.train(train_dataloader)
+    if opt.model == 'pointnet':
+        ffd_contrast.train(train_dataloader)
+    if opt.model =='dgcnn':
+        ffd_contrast.train_DGCNN(train_dataloader)
+
 
 
 

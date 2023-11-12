@@ -18,6 +18,7 @@ class FFD_contrast(object):
         self.writer = kwargs['writer']
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
+        self.criterion = kwargs['criterion']
         self.model_list =  kwargs['model_list']
         self.chamferDist = ChamferDistance()
         self.EMD = emd_module.emdModule()
@@ -46,4 +47,7 @@ class FFD_contrast(object):
             return criterion(dp_1_feat, dp_2_feat) * 0.01
 
     def train(self,train_loader):
+        pass
+
+    def train_DGCNN(self,train_loader):
         pass

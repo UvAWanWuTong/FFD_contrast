@@ -75,37 +75,6 @@ def xyz_to_stu(xyz, origin, stu_axes):
 
 
 
-#
-# def xyz_to_stu(xyz, origin, stu_axes):
-#     if stu_axes.shape == (3,):
-#         stu_axes = np.diag(stu_axes)
-#         # raise ValueError(
-#         #     'stu_axes should have shape (3,), got %s' % str(stu_axes.shape))
-#     # s, t, u = np.diag(stu_axes)
-#     assert(stu_axes.shape == (3, 3))
-#     s, t, u = stu_axes
-#
-#     tu = np.cross(t, u)
-#     su = np.cross(s, u)
-#     st = np.cross(s, t)
-#
-#     diff = xyz - origin
-#
-#     # TODO: vectorize? np.dot(diff, [tu, su, st]) / ...
-#
-#     try:
-#         stu = np.stack([
-#             np.dot(diff, tu) / np.dot(s, tu),
-#             np.dot(diff, su) / np.dot(t, su),
-#             np.dot(diff, st) / np.dot(u, st)
-#         ], axis=-1)
-#     except RuntimeWarning:
-#         print('okk')
-#
-#
-#     return stu
-#
-#
 
 
 def handling_inf(A,B):
@@ -184,11 +153,7 @@ def get_stu_params(xyz):
 
 
 def calculate_ffd(points,n=3):
-    # import template_FFD.deform as ffd
-    # import util3d.mesh.sample as sample
-    # stu_origin, stu_axes = ffd.get_stu_params(vertices)
     dims = (n,) * 3
-    # return ffd.get_ffd(points, dims)
     return get_ffd(points, dims)
 
 
