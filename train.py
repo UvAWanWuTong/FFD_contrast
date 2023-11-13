@@ -189,8 +189,13 @@ def main():
 
 
 
+    if opt.model != 'dgcnn':
+        print("using StepLR")
+        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
+    else:
+        print("using CosineAnnealingLR ")
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.epochs, eta_min=0, last_epoch=-1)
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
     criterion = NTXentLoss(temperature = 0.1).to(opt.device)
     num_batch = len(dataset) / opt.batchSize
 

@@ -204,6 +204,8 @@ class FFD_learnable_contrast(FFD_contrast):
                 test_val_loader = DataLoader(ModelNet40SVM(partition='test',root=self.args.dataset), batch_size=self.args.batchSize,
                                              shuffle=True)
 
+
+                # Testing on modelnet40 data
                 if counter % self.test_freq ==0:
                     feats_train = []
                     labels_train = []
@@ -241,6 +243,7 @@ class FFD_learnable_contrast(FFD_contrast):
                     model_tl.fit(feats_train, labels_train)
                     test_accuracy = model_tl.score(feats_test, labels_test)
                     print(f"Linear Accuracy : {test_accuracy}")
+                    self.writer.log({"Linear Accuracy":test_accuracy})
 
 
 
@@ -252,7 +255,6 @@ class FFD_learnable_contrast(FFD_contrast):
                         "reg loss": reg_loss.item(),
                         "Train epoch": epoch,
                         "Learning rate": self.scheduler.get_last_lr()[0],
-                        "Linear Accuracy":test_accuracy,
                         "Max ACC": self.best_acc
 
                     },
@@ -262,7 +264,6 @@ class FFD_learnable_contrast(FFD_contrast):
                         "train loss": loss.item(),
                         "Train epoch": epoch,
                         "Learning rate": self.scheduler.get_last_lr()[0],
-                        "Linear Accuracy": test_accuracy,
                         "Max ACC": self.best_acc
 
 
@@ -296,14 +297,12 @@ class FFD_learnable_contrast(FFD_contrast):
                     'state_dict': self.deform_net_1.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path, save_deform=True)
-                self.min_loss = loss
 
                 deform_net_name = 'deform_net_2.pth.tar'
                 save_checkpoint({
                     'state_dict': self.deform_net_2.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=deform_net_name, file_dir=self.args.save_path, save_deform=True)
-                self.min_loss = loss
 
 
 
