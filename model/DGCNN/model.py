@@ -25,7 +25,7 @@ def get_graph_feature(x, k=20, idx=None):
     x = x.view(batch_size, -1, num_points)
     if idx is None:
         idx = knn(x, k=k)  # (batch_size, num_points, k)
-    device = torch.device('cuda:1')
+    device = torch.device('cuda:0')
 
     idx_base = torch.arange(0, batch_size, device=device).view(-1, 1, 1) * num_points
 
@@ -47,16 +47,14 @@ def get_graph_feature(x, k=20, idx=None):
 
 
 class DGCNN(nn.Module):
-    def __init__(self, args, cls=-1):
+    def __init__(self,args,k=15, cls=-1):
         super(DGCNN, self).__init__()
-        self.args = args
-        self.k = args.k
-
+        self.k = k
         self.bn1 = nn.BatchNorm2d(64)
         self.bn2 = nn.BatchNorm2d(64)
         self.bn3 = nn.BatchNorm2d(128)
         self.bn4 = nn.BatchNorm2d(256)
-        self.bn5 = nn.BatchNorm1d(args.emb_dims)
+        self.bn5 = nn.BatchNorm1d(args.feature_size)
 
         self.conv1 = nn.Sequential(nn.Conv2d(6, 64, kernel_size=1, bias=False),
                                    self.bn1,
@@ -70,26 +68,26 @@ class DGCNN(nn.Module):
         self.conv4 = nn.Sequential(nn.Conv2d(128 * 2, 256, kernel_size=1, bias=False),
                                    self.bn4,
                                    nn.LeakyReLU(negative_slope=0.2))
-        self.conv5 = nn.Sequential(nn.Conv1d(512, args.emb_dims, kernel_size=1, bias=False),
+        self.conv5 = nn.Sequential(nn.Conv1d(512, args.feature_size, kernel_size=1, bias=False),
                                    self.bn5,
                                    nn.LeakyReLU(negative_slope=0.2))
 
         if cls != -1:
-            self.linear1 = nn.Linear(args.emb_dims * 2, 512, bias=False)
+            self.linear1 = nn.Linear(args.feature_size * 2, 512, bias=False)
             self.bn6 = nn.BatchNorm1d(512)
-            self.dp1 = nn.Dropout(p=args.dropout)
+            self.dp1 = nn.Dropout(p=0.5)
             self.linear2 = nn.Linear(512, 256)
             self.bn7 = nn.BatchNorm1d(256)
-            self.dp2 = nn.Dropout(p=args.dropout)
-            self.linear3 = nn.Linear(256, output_channels)
+            self.dp2 = nn.Dropout(p=0.5)
+            self.linear3 = nn.Linear(256, 15)
 
         self.cls = cls
 
         self.inv_head = nn.Sequential(
-            nn.Linear(args.emb_dims * 2, args.emb_dims),
-            nn.BatchNorm1d(args.emb_dims),
+            nn.Linear(args.feature_size * 2, args.feature_size),
+            nn.BatchNorm1d(args.feature_size),
             nn.ReLU(inplace=True),
-            nn.Linear(args.emb_dims, 256)
+            nn.Linear(args.feature_size, 256)
         )
 
     def forward(self, x):

@@ -225,10 +225,9 @@ for epoch in range(opt.nepoch):
         pred, trans, trans_feat = classifier(points)
 
 
-
         loss = F.nll_loss(pred, target)
-        if opt.feature_transform:
-            loss += feature_transform_regularizer(trans_feat) * 0.001
+        # if opt.feature_transform:
+        #     loss += feature_transform_regularizer(trans_feat) * 0.001
         loss.backward()
         optimizer.step()
         scheduler.step()

@@ -8,8 +8,9 @@ from tqdm.auto import tqdm
 import sys
 import torch
 from torch.utils.data import DataLoader
-
-
+from Data.dataset import  ModelNet40SVM
+from sklearn.svm import SVC
+import numpy as np
 
 from strategy.FFD_contrast import FFD_contrast
 
@@ -20,6 +21,7 @@ class FFD_learnable_contrast(FFD_contrast):
         self.deform_net_1 = self.model_list[1].train()
         self.deform_net_2 = self.model_list[2].train()
         self.writer.watch(self.classifier)
+        self.test_freq = 1000
 
 
     def train(self,train_loader):
@@ -116,7 +118,7 @@ class FFD_learnable_contrast(FFD_contrast):
                 save_checkpoint({
                     'current_epoch': epoch,
                     'epoch': self.args.nepoch,
-                    'state_dict': self.model.state_dict(),
+                    'state_dict': self.classifier.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=checkpoint_name,file_dir=self.args.save_path)
                 self.min_loss = loss
@@ -153,7 +155,7 @@ class FFD_learnable_contrast(FFD_contrast):
                 points = points.transpose(2, 1).to(self.args.device)
                 self.optimizer.zero_grad()
 
-                feature, _, _ = self.classifier(points)
+                _, feature, _ = self.classifier(points)
                 n_feature = normalize_pointcloud_tensor(feature)
 
                 # get FFD deformation strategy
@@ -173,8 +175,8 @@ class FFD_learnable_contrast(FFD_contrast):
                 points2_ffd = points2_ffd.transpose(2, 1).to(self.args.device)
 
                 # get the feature after FFD
-                F1, _, _, = self.classifier(points1_ffd)
-                F2, _, _, = self.classifier(points2_ffd)
+                _, F1, _, = self.classifier(points1_ffd)
+                _, F2, _, = self.classifier(points2_ffd)
 
                 if self.args.regularization != 'none':
                     reg_loss = self.regularization_selector(loss_type=self.args.regularization,
@@ -189,21 +191,60 @@ class FFD_learnable_contrast(FFD_contrast):
                     loss = self.criterion(F1, F2)
                 # Testing
 
-                train_val_loader = DataLoader(ModelNet40SVM(partition='train', num_points=1024), batch_size=128,
-                                              shuffle=True)
-                test_val_loader = DataLoader(ModelNet40SVM(partition='test', num_points=1024), batch_size=128,
-                                             shuffle=True)
-
-                feats_train = []
-                labels_train = []
-                point_model.eval()
-
                 epoch_loss += loss.item()
-
                 loss.backward()
 
                 self.optimizer.step()
                 self.scheduler.step()
+
+
+
+                train_val_loader = DataLoader(ModelNet40SVM(partition='train',root=self.args.dataset), batch_size=self.args.batchSize,
+                                              shuffle=True)
+                test_val_loader = DataLoader(ModelNet40SVM(partition='test',root=self.args.dataset), batch_size=self.args.batchSize,
+                                             shuffle=True)
+
+                if counter % self.test_freq ==0:
+                    feats_train = []
+                    labels_train = []
+                    self.classifier.eval()
+                    for i, (data, label) in enumerate(train_val_loader):
+                        labels = list(map(lambda x: x[0], label.numpy().tolist()))
+                        data = data.permute(0, 2, 1).to(self.args.device)
+                        with torch.no_grad():
+                            feats = self.classifier(data)[2]
+                        feats = feats.detach().cpu().numpy()
+                        for feat in feats:
+                            feats_train.append(feat)
+                        labels_train += labels
+
+                    feats_train = np.array(feats_train)
+                    labels_train= np.array(labels_train)
+
+                    feats_test = []
+                    labels_test = []
+
+                    for i, (data, label) in enumerate(test_val_loader):
+                        labels = list(map(lambda x: x[0], label.numpy().tolist()))
+                        data = data.permute(0, 2, 1).to(self.args.device)
+                        with torch.no_grad():
+                            feats = self.classifier(data)[2]
+                        feats = feats.detach().cpu().numpy()
+                        for feat in feats:
+                            feats_test.append(feat)
+                        labels_test += labels
+
+                    feats_test = np.array(feats_test)
+                    labels_test = np.array(labels_test)
+
+                    model_tl = SVC(C=0.1, kernel='linear')
+                    model_tl.fit(feats_train, labels_train)
+                    test_accuracy = model_tl.score(feats_test, labels_test)
+                    print(f"Linear Accuracy : {test_accuracy}")
+
+
+
+
 
                 if self.args.regularization != 'none':
                     self.writer.log({
@@ -211,6 +252,8 @@ class FFD_learnable_contrast(FFD_contrast):
                         "reg loss": reg_loss.item(),
                         "Train epoch": epoch,
                         "Learning rate": self.scheduler.get_last_lr()[0],
+                        "Linear Accuracy":test_accuracy,
+                        "Max ACC": self.best_acc
 
                     },
                     )
@@ -219,6 +262,9 @@ class FFD_learnable_contrast(FFD_contrast):
                         "train loss": loss.item(),
                         "Train epoch": epoch,
                         "Learning rate": self.scheduler.get_last_lr()[0],
+                        "Linear Accuracy": test_accuracy,
+                        "Max ACC": self.best_acc
+
 
                     },
                     )
@@ -228,7 +274,7 @@ class FFD_learnable_contrast(FFD_contrast):
 
             if epoch % 5 == 0:
                 # save the best model checkpoints
-                if epoch_loss / self.num_batch < self.min_loss:
+                if test_accuracy > self.best_acc:
                     is_best = True
                     print('Save Best model')
                 else:
@@ -239,10 +285,10 @@ class FFD_learnable_contrast(FFD_contrast):
                 save_checkpoint({
                     'current_epoch': epoch,
                     'epoch': self.args.nepoch,
-                    'state_dict': self.model.state_dict(),
+                    'state_dict': self.classifier.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
                 }, is_best=is_best, filename=checkpoint_name, file_dir=self.args.save_path)
-                self.min_loss = loss
+                self.best_acc = test_accuracy
 
                 # save deform net
                 deform_net_name = 'deform_net_1.pth.tar'

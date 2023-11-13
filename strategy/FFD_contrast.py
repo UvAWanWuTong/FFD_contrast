@@ -18,10 +18,12 @@ class FFD_contrast(object):
         self.writer = kwargs['writer']
         self.num_batch =  kwargs['num_batch']
         self.min_loss = 1000
+        self.best_acc =  0
         self.criterion = kwargs['criterion']
         self.model_list =  kwargs['model_list']
         self.chamferDist = ChamferDistance()
         self.EMD = emd_module.emdModule()
+
 
     def regularization_selector(self, loss_type=None, control_points = None, point_cloud = None, classifier=None, criterion=None):
 

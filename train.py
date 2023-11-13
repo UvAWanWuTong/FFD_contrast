@@ -26,13 +26,14 @@ parser.add_argument(
 parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument(
-    '--outf', type=str, default='checkpoints_train', help='output folder')
+    '--outf', type=str, default='model/checkpoints_train', help='output folder')
 parser.add_argument(
     '--model', type=str, default='pointnet', help='backbone model')
 parser.add_argument(
     '--checkpoint', type=str, default='', help='continue training form last checkpoints')
 parser.add_argument(
     '--dataset', type=str, required=True, help="dataset path")
+
 parser.add_argument(
     '--dataset_type', type=str, default='shapenet', help="modelnet40,shapenet")
 parser.add_argument(
@@ -153,7 +154,7 @@ def main():
     if opt.model=="pointnet":
         model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear,feature_size=opt.feature_size)
     elif opt.model=="dgcnn":
-        model = DGCNN(k=15)
+        model = DGCNN(args=opt,k=15)
 
 
     deform_net_map = {
@@ -167,11 +168,12 @@ def main():
     #     opt.task_type not in ['leanable','random']
     # except Exception :
     #      print('No avaliable task type ')
-
+    deform_input_feat = opt.feature_size
     if opt.task_type != 'random':
-
-        deform_net1 =  deform_net_map[opt.structure](in_features=opt.feature_size,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  deform_net_map[opt.structure](in_features=opt.feature_size,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        if opt.model=="dgcnn":
+             deform_input_feat = 256
+        deform_net1 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net2 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},
@@ -236,6 +238,10 @@ def main():
     if opt.model == 'pointnet':
         ffd_contrast.train(train_dataloader)
     if opt.model =='dgcnn':
+        # try:
+        #     opt.svm_dataset
+        # except:
+        #     print("svm dataset has tobe specified for DGCNN SVM linear head")
         ffd_contrast.train_DGCNN(train_dataloader)
 
 

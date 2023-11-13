@@ -41,7 +41,6 @@ def gen_modelnet_id(root):
 
 def load_shapenet_data(root):
     all_filepath = []
-
     for cls in glob.glob(root+'/*'):
         pcs = glob.glob(os.path.join(cls, '*'))
         all_filepath += pcs
@@ -55,7 +54,7 @@ class Contrastive_ShapeNet(data.Dataset):
                  FFD = True,
                  ffd_points_axis=3,
                  ffd_control= 6):
-        self.data = load_shapenet_data(root)
+        self.data = load_shapenet_data(root+'ShapeNet')
         self.ffd_points_axis = ffd_points_axis
         self.ffd_control= ffd_control
         self.ffd = FFD
@@ -94,14 +93,11 @@ class Contrastive_ModelNetDataset(data.Dataset):
         self.ffd_control= ffd_control
         self.ffd = FFD
         self.npoints = npoints
-        self.root = root
+        self.root = root+'ModelNet40'
         self.split = split
         self.data_augmentation = data_augmentation
+        self.data_augmentation = data_augmentation
         self.fns = []
-
-
-
-
         with open(os.path.join(root, '{}.txt'.format(self.split)), 'r') as f:
             for line in f:
                 self.fns.append(line.strip())
@@ -116,11 +112,6 @@ class Contrastive_ModelNetDataset(data.Dataset):
 
         print(self.cat)
         self.classes = list(self.cat.keys())
-
-
-
-
-
     def __getitem__(self, index):
         fn = self.fns[index]
         cls = self.cat[fn.split('/')[0]]
@@ -216,10 +207,25 @@ def load_ScanObjectNN(partition):
 
     return data, label
 
+def load_modelnet_data(root,partition):
+    all_data = []
+    all_label = []
+    for h5_name in glob.glob(os.path.join(root, 'ply_data_%s*.h5'%partition)):
+        f = h5py.File(h5_name)
+        data = f['data'][:].astype('float32')
+        label = f['label'][:].astype('int64')
+        f.close()
+        all_data.append(data)
+        all_label.append(label)
+    all_data = np.concatenate(all_data, axis=0)
+    all_label = np.concatenate(all_label, axis=0)
+    return all_data, all_label
+
+
 
 class ModelNet40SVM(data.Dataset):
-    def __init__(self, num_points, partition='train'):
-        self.data, self.label = load_modelnet_data(partition)
+    def __init__(self,root, num_points=1024, partition='train'):
+        self.data, self.label = load_modelnet_data(root+'modelnet40_ply_hdf5_2048',partition)
         self.num_points = num_points
         self.partition = partition
 
@@ -252,6 +258,11 @@ if __name__ == '__main__':
 
     if dataset == 'modelnet':
         d= Contrastive_ModelNetDataset(root=datapath)
+        print(len(d))
+        print(d[0])
+
+    if dataset == 'svmmodelnet':
+        d = ModelNet40SVM(root=datapath)
         print(len(d))
         print(d[0])
     if dataset == 'shapenet':
