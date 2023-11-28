@@ -69,10 +69,6 @@ parser.add_argument(
     '--feature_size', type=int, default=128, help='the feature size of encoder output'
 )
 
-parser.add_argument(
-    '--non_linear', default=False,action='store_true',  help='non linear projection head'
-)
-
 
 
 
@@ -84,11 +80,11 @@ def main():
     opt = parser.parse_args() 
     opt.ffd_points = pow(opt.ffd_points_axis,3)
     if opt.regularization != 'none':
-        opt.expriment_name = "{model}_{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}_{reg}".\
-            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size,non_linear=opt.non_linear)
+        opt.expriment_name = "{model}_{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_{reg}".\
+            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size)
     else:
-        opt.expriment_name = "{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_non_linear:{non_linear}".\
-            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size,non_linear=opt.non_linear)
+        opt.expriment_name = "{model}_{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}".\
+            format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,feature_size=opt.feature_size)
 
 
     if not os.path.exists(os.path.join(opt.outf,opt.expriment_name)):
@@ -194,7 +190,7 @@ def main():
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.step_size, gamma=opt.decay)
     else:
         print("using CosineAnnealingLR ")
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.epochs, eta_min=0, last_epoch=-1)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.nepoch, eta_min=0, last_epoch=-1)
 
     criterion = NTXentLoss(temperature = 0.1).to(opt.device)
     num_batch = len(dataset) / opt.batchSize
@@ -241,12 +237,8 @@ def main():
                                               num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
     if opt.model == 'pointnet':
-        ffd_contrast.train(train_dataloader)
+        ffd_contrast.train_PointNet(train_dataloader)
     if opt.model =='dgcnn':
-        # try:
-        #     opt.svm_dataset
-        # except:
-        #     print("svm dataset has tobe specified for DGCNN SVM linear head")
         ffd_contrast.train_DGCNN(train_dataloader)
 
 

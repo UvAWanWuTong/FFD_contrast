@@ -189,11 +189,10 @@ class Contrastive_PointNet(nn.Module):
 
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
-        x = self.fc1(x)
-        if self.non_linear:
-            x = self.relu(x)
-        feature =  F.log_softmax(x, dim=1)
-        return feature, trans, trans_feat
+        projection_feature = self.fc1(x)
+        projection_feature = self.relu(projection_feature)
+        # feature =  F.log_softmax(x, dim=1)
+        return projection_feature, x, trans_feat
 
 
 
