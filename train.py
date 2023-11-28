@@ -50,7 +50,7 @@ parser.add_argument(
 parser.add_argument(
     '--step_size', type=int, default=200, help='step size of learning rate decay')
 parser.add_argument(
-    '--decay', type=float, default=0.8, help='lr decay  ')
+    '--decay', type=float, default=0.8, help='lr decay')
 parser.add_argument(
     '--sampler', type=str, default='random',help='choose of sampler'
 )
@@ -79,6 +79,7 @@ def main():
 
     opt = parser.parse_args() 
     opt.ffd_points = pow(opt.ffd_points_axis,3)
+
     if opt.regularization != 'none':
         opt.expriment_name = "{model}_{lr:}_{step_size}_{decay}_FFD_Contrast_{task_type}_{ffd_points}_train-{batchSize}_{structure}_{feature_size}_{reg}".\
             format(model=opt.model,lr=opt.lr, step_size=opt.step_size, decay=opt.decay,task_type=opt.task_type, ffd_points=opt.ffd_points, batchSize=opt.batchSize,structure=opt.structure,reg=opt.regularization,feature_size=opt.feature_size)
@@ -115,7 +116,7 @@ def main():
                     root=opt.dataset,
                     npoints=opt.num_points,
                     split='train',
-                    ffd_points_axis = opt.ffd_points_axis,
+                    ffd_points_axis = opt.ffd_points_axis-1,
                     ffd_control = opt.ffd_control,
                 )
 
@@ -126,7 +127,7 @@ def main():
             root=opt.dataset,
             npoints=opt.num_points,
             split='train',
-            ffd_points_axis=opt.ffd_points_axis,
+            ffd_points_axis=opt.ffd_points_axis-1,
             ffd_control=opt.ffd_control,
         )
 
@@ -148,7 +149,7 @@ def main():
 
     model_list = None
     if opt.model=="pointnet":
-        model = Contrastive_PointNet(feature_transform=opt.feature_transform,non_linear=opt.non_linear,feature_size=opt.feature_size)
+        model = Contrastive_PointNet(feature_transform=opt.feature_transform,feature_size=opt.feature_size)
     elif opt.model=="dgcnn":
         model = DGCNN(args=opt,k=15)
 
@@ -168,8 +169,8 @@ def main():
     if opt.task_type != 'random':
         if opt.model=="dgcnn":
              deform_input_feat = 256
-        deform_net1 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
-        deform_net2 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis+1)**3 * 3).to(opt.device)
+        deform_net1 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis)**3 * 3).to(opt.device)
+        deform_net2 =  deform_net_map[opt.structure](in_features=deform_input_feat,out_features=(opt.ffd_points_axis)**3 * 3).to(opt.device)
 
         optimizer = optim.Adam([
             {'params': model.parameters()},
