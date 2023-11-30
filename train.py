@@ -55,7 +55,7 @@ parser.add_argument(
     '--sampler', type=str, default='random',help='choose of sampler'
 )
 parser.add_argument(
-    '--task_type', type=str, default='learnable',help='type of ffd deformation, avaliable choices: random,mix,multi'
+    '--task_type', type=str, default='learnable',help='type of ffd deformation, avaliable choices: random,mix,mixup'
 )
 parser.add_argument(
     '--regularization', type=str ,default='double', help='use of regulariztion term, avaliable choices: double,chamfer,emd,none'
@@ -233,7 +233,7 @@ def main():
     elif opt.task_type == "mix":
         ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
-    elif opt.task_type == "multi":
+    elif opt.task_type == "mixup":
         ffd_contrast = FFD_multi_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb,
                                               num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
