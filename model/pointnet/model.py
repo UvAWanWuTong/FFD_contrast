@@ -6,15 +6,13 @@ import torch.utils.data
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
-
+from torch import nn
 
 
 class Deform_Net_1layer(nn.Module):
     def __init__(self, in_features, out_features):
-
         super(Deform_Net_1layer, self).__init__()
         self.fc = nn.Linear(in_features, out_features)
-
 
     def forward(self,x):
         dp = self.fc(x)
@@ -33,7 +31,7 @@ class Deform_Net_2layer(nn.Module):
 
     def forward(self,x):
         dp = F.relu(self.bn1(self.fc1(x)))
-        dp = F.relu(self.fc2(dp))
+        dp = self.fc2(dp)
         dp = torch.reshape(dp,(x.shape[0],-1,3))
         return dp
 
@@ -190,8 +188,6 @@ class Contrastive_PointNet(nn.Module):
     def forward(self, x):
         x, trans, trans_feat = self.feat(x)
         projection_feature = self.fc1(x)
-        projection_feature = self.relu(projection_feature)
-        # feature =  F.log_softmax(x, dim=1)
         return projection_feature, x, trans_feat
 
 

@@ -33,7 +33,7 @@ class FFD_contrast(object):
         if loss_type == 'none':
             return 0
         if loss_type == 'chamfer':
-            return 0.5 * self.chamferDist(cp1.cpu(), cp1.cpu(), bidirectional=True).cuda() * 0.01
+            return 0.5 * self.chamferDist(cp1.cpu(), cp2.cpu(), bidirectional=True).cuda() * 0.1
 
         if loss_type == 'emd':
             pc1 = pc1.transpose(2, 1).to(self.args.device)

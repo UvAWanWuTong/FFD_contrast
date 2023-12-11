@@ -38,8 +38,6 @@ class FFD_random_contrast(FFD_contrast):
 
 
 
-
-
                 self.optimizer.zero_grad()
                 classifier = self.model.train()
 

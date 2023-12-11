@@ -165,8 +165,7 @@ class FFD_learnable_contrast(FFD_contrast):
                 dp_2 = self.deform_net_2(n_feature).to(self.args.device)
 
 
-                dp_1  = self.sigmoid(dp_1)
-                dp_2  = self.sigmoid(dp_2)
+
 
                 # perfom ffd
                 points1_ffd = torch.bmm(b, p + dp_1)
