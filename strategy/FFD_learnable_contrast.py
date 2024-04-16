@@ -12,8 +12,6 @@ from torch.utils.data import DataLoader
 from Data.dataset import  ModelNet40SVM
 from sklearn.svm import SVC
 import numpy as np
-
-
 from strategy.FFD_contrast import FFD_contrast
 
 class FFD_learnable_contrast(FFD_contrast):

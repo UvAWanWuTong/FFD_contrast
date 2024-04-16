@@ -6,7 +6,8 @@ import torch.optim as optim
 import torch.utils.data
 
 from Data.dataset import Contrastive_ModelNetDataset,Contrastive_ShapeNet
-from model.pointnet.model import Contrastive_PointNet, Deform_Net_1layer,Deform_Net_2layer,Deform_Net_3layer
+from model.pointnet.model import Deform_Net_1layer,Deform_Net_2layer,Deform_Net_3layer
+from model.pointnet.model import Contrastive_PointNet
 from model.DGCNN.model import DGCNN
 from strategy.FFD_learnable_contrast import FFD_learnable_contrast
 from strategy.FFD_random_contrast import FFD_random_contrast
@@ -36,8 +37,10 @@ parser.add_argument(
 
 parser.add_argument(
     '--dataset_type', type=str, default='shapenet', help="modelnet40,shapenet")
+
 parser.add_argument(
     '--feature_transform',default= False, action='store_true', help="use feature transform")
+
 parser.add_argument(
     '--disable_cuda', default=False,action='store_true',
                     help='Disable CUDA')
@@ -149,7 +152,7 @@ def main():
 
     model_list = None
     if opt.model=="pointnet":
-        model = Contrastive_PointNet(feature_transform=opt.feature_transform,feature_size=opt.feature_size)
+        model = Contrastive_PointNet(feature_size=opt.feature_size)
     elif opt.model=="dgcnn":
         model = DGCNN(args=opt,k=15)
 

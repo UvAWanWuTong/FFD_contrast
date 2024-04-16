@@ -182,11 +182,6 @@ class ModelNetDataset(data.Dataset):
         point_set = RandomSampler(self.npoints)(verts)
         point_set = Normalize()(point_set) #normolize
 
-        if self.data_augmentation:
-            theta = np.random.uniform(0, np.pi * 2)
-            rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-            point_set[:, [0, 2]] = point_set[:, [0, 2]].dot(rotation_matrix)  # random rotation
-            point_set += np.random.normal(0, 0.02, size=point_set.shape)  # random jitter
 
         point_set = torch.from_numpy(point_set.astype(np.float32))
         cls = torch.from_numpy(np.array([cls]).astype(np.int64))

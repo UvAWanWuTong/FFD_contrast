@@ -245,12 +245,7 @@ if __name__ == '__main__':
 
     pointfeat = PointNetfeat(global_feat=True)
     out, _, _ = pointfeat(sim_data)
-    print('global feat', out.size())
-
-
-    pointfeat = PointNetfeat(global_feat=False)
-    out, _, _ = pointfeat(sim_data)
-    print('point feat', out.size())
+    print('global feat', out)
 
 
 

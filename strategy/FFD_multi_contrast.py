@@ -104,8 +104,8 @@ class FFD_multi_contrast(FFD_contrast):
                 # dp_2 = normalize_pointcloud_tensor(dp_2 + noise_2)
 
 
-                cp_1 = normalize_pointcloud_tensor(p+dp_1)
-                cp_2 = normalize_pointcloud_tensor(p+dp_2)
+                cp_1 = p+normalize_pointcloud_tensor(dp_1)
+                cp_2 = p+normalize_pointcloud_tensor(dp_2)
 
 
                 # perfom ffd
