@@ -23,28 +23,26 @@ pip install -r requirements.txt
 
 Compile the cuda dependencies using following simple commands (emd loss):
 ```
-cd lib
-sh make.sh
+cd utils/emd_ && python setup.py install 
 ```
 
 
 ### Preparation
 
-Download the initial backbone weight from [Onedrive](https://1drv.ms/u/s!AjFGSP2CJWCwgXE38zYaQRR3a6L9?e=8FNHFg), and put it in the directory data/pretrained_model
 
 
+Datasets are available [here](https://drive.google.com/drive/folders/1dAH9R3XDV0z69Bz6lBaftmJJyuckbPmR). Run the command below to download all the datasets (ShapeNetRender, ModelNet40, ScanObjectNN, ShapeNetPart) to reproduce the results.
 
-Extract ActivityNet1.3 frames by FPS=3 following [R-C3D](https://github.com/VisionLearningGroup/R-C3D/blob/master/preprocess/activityNet/generate_frames.py), after that please put them in the directory ```dataset/activitynet13/train_val_frames_3/```, it ought to contain two folders: ```training, validation```.
+```
+cd Data
 
-
-The detail structure of the dataset is already splitted in our pickle file in ```./preprocess```. If you want to create your own dataset, you can follow [here](https://github.com/sunnyxiaohu/R-C3D.pytorch/blob/master/preprocess/activitynet/generate_roidb_training.py#L137) to create your own pickle file.
-
-
+source download_data.sh
+```
 
 ### Training
 
 ```
-python main.py --bs 1 --gpus 0
+python train.py --model pointnet --dataset Data/ --nepoch 100 --dataset_type shapenet --lr 0.001 --decay 0.8 --step_size 2000 --batchSize 64 --ffd_points_axis 5 --task_type mixup --structure 3layer --feature_size 128 --regularization chamfer
 ```
 
 
@@ -53,17 +51,17 @@ python main.py --bs 1 --gpus 0
 Firstly, download our trained weight from [Onedrive](https://1drv.ms/u/s!ArycXAIEda_Kcexadq6DPu0AF5o?e=fID2NN), and put the trained weight file ```best_model.pth``` in ```train_log/main```, then do the evaluation following the command:
 
 ```
-python main.py --test
+ python evaluate.py --dataset Data/ --nepoch=150 --dataset_type modelnet40 --lr 0.003 --batchSize 64 --step_size=2000 --decay=0.8 --model model_path
 ```
 
 ### Email for QA
 
-Any question related to the repo, please send email to us: ```yangpengwan2016@gmail.com```.
+Any question related to the repo, please send email to us: ```1353099226why@gamil.com```.
 
 
 ### Acknowledgement
 
-This repo is developed based on [https://github.com/sunnyxiaohu/R-C3D.pytorch](https://github.com/sunnyxiaohu/R-C3D.pytorch), thanks for their contribution.
+This repo is developed based on [https://github.com/MohamedAfham/CrossPoint.git](https://github.com/MohamedAfham/CrossPoint.git), thanks for their contribution.
 
 ### Citation
 
