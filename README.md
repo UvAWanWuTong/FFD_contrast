@@ -67,16 +67,7 @@ This repo is developed based on [https://github.com/MohamedAfham/CrossPoint.git]
 
 If you think our work is useful, please kindly cite our work.
 
-```
-@INPROCEEDINGS{YangECCV20,
-        author = {Pengwan Yang and Vincent Tao Hu and Pascal Mettes and Cees G. M. Snoek},
-        title = {Localizing the Common Action Among a Few Videos},
-        booktitle = {European Conference on Computer Vision},
-        month = {August},
-        year = {2020},
-        address = {Glasgow, UK},
-      }
-```
+
 
 
 
