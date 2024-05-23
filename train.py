@@ -228,15 +228,8 @@ def main():
 
 
     if opt.task_type == "learnable":
-         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list,criterion=criterion)
+        ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list,criterion=criterion)
 
-    elif opt.task_type == "random":
-        ffd_contrast = FFD_random_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt,criterion=criterion)
-
-    elif opt.task_type == "mix":
-        ffd_contrast = FFD_mix_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb, num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
-
-    elif opt.task_type == "mixup":
         ffd_contrast = FFD_multi_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb,
                                               num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
