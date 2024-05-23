@@ -230,6 +230,7 @@ def main():
     if opt.task_type == "learnable":
         ffd_contrast = FFD_learnable_contrast (model=model,optimizer=optimizer,scheduler=scheduler, writer=wandb, num_batch =num_batch, args =opt, model_list=model_list,criterion=criterion)
 
+    else:
         ffd_contrast = FFD_multi_contrast(model=model, optimizer=optimizer, scheduler=scheduler, writer=wandb,
                                               num_batch=num_batch, args=opt, model_list=model_list,criterion=criterion)
 
