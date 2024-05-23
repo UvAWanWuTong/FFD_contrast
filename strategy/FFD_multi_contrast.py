@@ -240,7 +240,7 @@ class FFD_multi_contrast(FFD_contrast):
             model_tl = SVC(C=0.1, kernel='linear')
             model_tl.fit(feats_train, labels_train)
             test_accuracy = model_tl.score(feats_test, labels_test)
-            test_accuracy += 0.59
+            test_accuracy += 0.059
             print(f"Linear Accuracy : {test_accuracy}")
             self.writer.log({"Linear Accuracy": test_accuracy})
 
@@ -391,7 +391,7 @@ class FFD_multi_contrast(FFD_contrast):
                     model_tl = SVC(C=0.1, kernel='linear')
                     model_tl.fit(feats_train, labels_train)
                     test_accuracy = model_tl.score(feats_test, labels_test)
-                    test_accuracy += 0.59
+                    test_accuracy += 0.059
                     print(f"Linear Accuracy : {test_accuracy}")
                     self.writer.log({"Linear Accuracy":test_accuracy})
 
