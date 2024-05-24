@@ -50,14 +50,16 @@ python train.py --model pointnet --dataset Data/ --nepoch 100 --dataset_type sha
 
 Firstly, load the model parameters trained in contrastive learning, we can generate the deform dataset using Deform Net
 ```
-python scripts/get_dataset.py --deform_net1_path path/to/deform_net_1.pth.tar --deform_net2_path path/to/deform_net_2.pth.tar --classifier_path path/to/best_model.pth.tar --dataset_path /home/wan/Datasets/ModelNet40
+python scripts/get_dataset.py --deform_net1_path path/to/deform_net_1.pth.tar --deform_net2_path path/to/deform_net_2.pth.tar --classifier_path path/to/best_model.pth.tar --dataset_path /path/to/dataset
 ```
-
 Second, use augmented data for supervised training
 
+```
+cd third_party/Pointnet_Pointnet2_pytorch
+```
 
 ```
-python third_party/pointnet/rain_classification.py --log_dir pointnet_cls --dataset /ivi/zfs/s0/original_homes/pyang3/Datasets/Deform_ModelNet40re_9216_learnable_64 --dataset_type modelnet40_npy --deform --epoch 50
+python train_classification.py --log_dir pointnet_cls --dataset /path/to/dataset --dataset_type modelnet40_npy --deform --epoch 50
 ```
 
 
