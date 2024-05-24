@@ -10,8 +10,7 @@ from model.pointnet.model import Deform_Net_1layer,Deform_Net_2layer,Deform_Net_
 from model.pointnet.model import Contrastive_PointNet
 from model.DGCNN.model import DGCNN
 from strategy.FFD_learnable_contrast import FFD_learnable_contrast
-from strategy.FFD_random_contrast import FFD_random_contrast
-from strategy.FFD_mix_contrast import FFD_mix_contrast
+
 from strategy.FFD_multi_contrast import FFD_multi_contrast
 import torch.backends.cudnn as cudnn
 import lightly
