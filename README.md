@@ -39,20 +39,27 @@ cd Data
 source download_data.sh
 ```
 
-### Training
+### Unsupervised Training
 
 ```
 python train.py --model pointnet --dataset Data/ --nepoch 100 --dataset_type shapenet --lr 0.001 --decay 0.8 --step_size 2000 --batchSize 64 --ffd_points_axis 5 --task_type mixup --structure 3layer --feature_size 128 --regularization chamfer
 ```
 
 
-### Evaluate our trained weight 
+### Supervised Training
 
-Firstly, download our trained weight from [Onedrive](https://1drv.ms/u/s!ArycXAIEda_Kcexadq6DPu0AF5o?e=fID2NN), and put the trained weight file ```best_model.pth``` in ```train_log/main```, then do the evaluation following the command:
+Firstly, load the model parameters trained in contrastive learning, we can generate the deform dataset using Deform Net
+```
+python scripts/get_dataset.py --deform_net1_path path/to/deform_net_1.pth.tar --deform_net2_path path/to/deform_net_2.pth.tar --classifier_path path/to/best_model.pth.tar --dataset_path /home/wan/Datasets/ModelNet40
+```
+
+Second, use augmented data for supervised training
+
 
 ```
- python evaluate.py --dataset Data/ --nepoch=150 --dataset_type modelnet40 --lr 0.003 --batchSize 64 --step_size=2000 --decay=0.8 --model model_path
+python third_party/pointnet/rain_classification.py --log_dir pointnet_cls --dataset /ivi/zfs/s0/original_homes/pyang3/Datasets/Deform_ModelNet40re_9216_learnable_64 --dataset_type modelnet40_npy --deform --epoch 50
 ```
+
 
 ### Email for QA
 

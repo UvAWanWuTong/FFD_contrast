@@ -423,7 +423,7 @@ class FFD_multi_contrast(FFD_contrast):
                 print('\n [%d: %d/%d]  loss: %f  lr: %f' % (
                 epoch, counter, self.num_batch, loss.item(), self.scheduler.get_last_lr()[0]))
 
-            if epoch % 5 == 0:
+            if epoch % 1 == 0:
                 # save the best model checkpoints
                 if test_accuracy > self.best_acc:
                     is_best = True
