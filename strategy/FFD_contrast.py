@@ -38,7 +38,7 @@ class FFD_contrast(object):
         if loss_type == 'emd':
             pc1 = pc1.transpose(2, 1).to(self.args.device)
             pc2 = pc2.transpose(2, 1).to(self.args.device)
-            return torch.sum(self.EMD(pc1, pc2, 0.005, 300)[0]) * 0.001
+            return torch.sum(self.EMD(pc1, pc2, 0.005, 300)[0]) * 0.01
 
         if self.args.regularization == 'double':
             # get the feature ofd the control points
